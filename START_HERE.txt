@@ -1,0 +1,22 @@
+ChessPrune — Quick Start
+=======================================
+
+1. From this directory, create a virtual environment:
+
+   python3 -m venv .venv
+   .venv/bin/python -m pip install -r requirements.txt
+
+2. Install Stockfish if you want local engine evaluations (macOS):
+
+   brew install stockfish
+
+3. Start the local application:
+
+   .venv/bin/python app.py
+
+The browser should open at http://127.0.0.1:8765 (or the next free port).
+Choose a PGN and configure a White or Black repertoire, then start analysis.
+Generated results are stored locally under analyses/ and are not included in Git.
+
+For complete documentation, troubleshooting and GitHub publishing instructions,
+see README.md.

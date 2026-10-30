@@ -1,0 +1,37 @@
+# Python and local environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local analysis results, user files and caches
+analyses/
+output/
+output_*/
+results/
+results_test/
+.cache/
+*.log
+*.pgn
+**/data.json
+**/dashboard.html
+*.sqlite
+*.db
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

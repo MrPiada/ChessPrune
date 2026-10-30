@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>ChessPrune · Interactive Graph</title>
+<style>
+:root{--bg:#0b1119;--panel:#151f2b;--panel2:#1d2b3a;--line:#33475b;--text:#f0f5fa;--muted:#9cb2c5;--accent:#8fe7c7;--gold:#f5cd76;--red:#ff9d92;--blue:#a2cafd}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1{font-size:29px;line-height:1.15;margin:3px 0}h2{font-size:17px;margin:0 0 12px}h3{font-size:13px;margin:14px 0 6px;color:var(--muted)}p{margin:5px 0}.wrap{max-width:1770px;padding:22px 25px 55px;margin:auto}.eyebrow{color:var(--accent);font-size:11px;letter-spacing:1.9px;text-transform:uppercase;font-weight:750}.muted,.sub{color:var(--muted)}.small{font-size:12px}.mono{font-variant-numeric:tabular-nums}.header{display:flex;justify-content:space-between;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:18px}.chip{border:1px solid var(--line);background:var(--panel2);padding:9px 12px;border-radius:100px;color:var(--muted);font-size:12px}.panel{border:1px solid var(--line);border-radius:12px;background:var(--panel);min-width:0;padding:15px}.warning{border-color:#775d38;background:#29251f;color:#ffe2af;margin-bottom:13px}.notice{padding:10px 12px;border:1px solid #675b38;border-radius:9px;color:#ffe3a5;background:#332c22;font-size:12px}.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:13px}.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px}.kpi strong{font-size:22px;display:block;font-variant-numeric:tabular-nums}.kpi span{font-size:11px;color:var(--muted)}
+.toolbar{display:flex;gap:16px;flex-wrap:wrap;align-items:end}.field{display:flex;flex-direction:column;gap:5px;min-width:155px}.field label,.field .fieldtitle{font-size:11px;font-weight:650;color:var(--muted);letter-spacing:.3px}.field input[type=range]{width:225px;accent-color:var(--accent);margin:8px 0 6px}.field input[type=number]{width:100px}.input{border:1px solid var(--line);border-radius:7px;background:#101b26;color:var(--text);padding:9px;min-height:38px;max-width:100%}.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{border:1px solid #3d5367;color:var(--text);background:#263649;padding:9px 12px;border-radius:8px;font-weight:650;white-space:nowrap}.btn:hover{border-color:var(--accent);background:#2b4152}.btn.primary{background:#22634f;border-color:#43ad8e;color:#f1fff9}.btn.primary:hover{background:#2c7d63}.btn.highlight{background:#3c354d;border-color:#77649b}.pill{border-radius:999px;padding:2px 7px;font-size:10px;font-weight:800;white-space:nowrap;background:#24394a;color:#c4d9e8}.pill.trap{color:#f9d587;background:#4b4026}.pill.bad{color:#ffb3a9;background:#4e3138}.pill.kept{color:#a7f3d4;background:#1f473d}.pill.off{color:#b9c1ce;background:#313b49}
+.graph-layout{display:grid;grid-template-columns:minmax(0,1fr) 358px;gap:13px;margin-top:13px}.graph-panel{padding:0;overflow:hidden}.graph-top{padding:12px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}.graph-top .controls .btn{padding:6px 9px;font-size:12px}.graph-canvas{height:650px;position:relative;overflow:hidden;background:radial-gradient(circle,#172635 1px,transparent 1px) 0 0/24px 24px;background-color:#0e1822;touch-action:none;cursor:grab}.graph-canvas.dragging{cursor:grabbing}.graph-canvas svg{display:block;width:100%;height:100%;user-select:none}.graph-footer{border-top:1px solid var(--line);padding:9px 14px;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px}.graph-legend{display:flex;gap:13px;flex-wrap:wrap;align-items:center}.legend-dot{width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:4px}.node-hit{cursor:pointer}.node-hit:hover .cardbg{stroke:#ffffff;stroke-width:3.5}.node-hit.selected .cardbg{stroke:#fefefe;stroke-width:4}.branch-toggle,.chain-toggle{cursor:pointer}.branch-toggle:hover rect,.chain-toggle:hover rect{stroke:#fff;stroke-width:2.5}.node-hit.manual .cardbg{stroke-dasharray:6 3}.node-label{font:600 11px system-ui,sans-serif;fill:#d7e5ef}.edge{fill:none;stroke:#6e899a;stroke-width:2.5;opacity:.7}.branch-label{font:700 12px system-ui,sans-serif;fill:#a9c5d7;paint-order:stroke;stroke:#0e1822;stroke-width:4px}
+.detail{max-height:784px;overflow-y:auto}.chessboard{width:100%;max-width:298px;aspect-ratio:1;margin:12px auto 9px;border:4px solid #364c5a;display:grid;grid-template-columns:repeat(8,1fr);box-shadow:0 7px 18px #070c12}.sq{display:flex;justify-content:center;align-items:center;font:clamp(21px,3vw,36px)/1 "DejaVu Sans","Segoe UI Symbol","Apple Symbols",serif}.sq.l{background:#ead6b2}.sq.d{background:#88a996}.sq.last{box-shadow:inset 0 0 0 100px #f6df6565}.wp{color:#fff;text-shadow:0 2px 2px #111,0 0 2px #111}.bp{color:#162938;text-shadow:0 0 1px white}.evalbox{display:grid;grid-template-columns:1fr auto;gap:7px;padding:6px 0;border-bottom:1px solid #2b3d4c}.evalbox b{color:#f4f7fa}.moveline{font-size:12px;max-height:85px;overflow:auto;line-height:1.65;color:#c7d9e5;word-break:break-word}.comment{border-left:3px solid var(--gold);background:#0f1b26;padding:9px 11px;color:#d5e0e9;white-space:pre-wrap;border-radius:4px;font-size:12px;max-height:150px;overflow:auto}.next-btn{display:block;border:1px solid #395068;border-radius:8px;background:#1b2a38;color:#ecf4f8;width:100%;text-align:left;padding:8px;margin:6px 0}.next-btn:hover{border-color:var(--accent)}.next-btn.dim{opacity:.5}.next-btn small{display:block;color:var(--muted)}
+.lower{display:grid;grid-template-columns:360px minmax(0,1fr);gap:13px;margin-top:13px}.tablewrap{overflow:auto;max-height:520px;border:1px solid #354657;border-radius:8px}table{width:100%;border-collapse:collapse;min-width:600px}th,td{padding:9px 11px;text-align:left;border-bottom:1px solid #304354;font-size:12px}th{color:#b7ccda;background:#233446;position:sticky;top:0;z-index:1}td{color:#e3ecf1}tr.clickable:hover{background:#254052;cursor:pointer}tr.dim{opacity:.43}.summarytable{min-width:0} .summarytable td,.summarytable th{padding:11px 7px}.important{color:var(--accent);font-weight:750}.good{color:var(--accent)}.bad{color:var(--red)}.help{font-size:12px;color:var(--muted);line-height:1.7}.searchbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 9px}.searchbar input{min-width:240px;flex:1}.foot{padding:18px 2px;font-size:12px;color:var(--muted)}.flexrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.only{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12px}.only input{accent-color:var(--accent)}
+.target-control[hidden],.coverage-control[hidden]{display:none!important}.target-control input[type=number]{width:90px}.trap-panel{margin-top:13px}.trap-panel .tablewrap{max-height:345px}.action-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0}.switch-tip{color:var(--muted);font-size:11px}.trap-filter{font-size:11px;color:var(--muted)}
+@media(max-width:1100px){.graph-layout{grid-template-columns:minmax(0,1fr)}.detail{max-height:none}.detailinner{display:grid;grid-template-columns:minmax(230px,320px) minmax(300px,1fr);gap:15px}.lower{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.graph-canvas{height:570px}}@media(max-width:660px){.wrap{padding:13px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.detailinner{display:block}.graph-canvas{height:490px}.field input[type=range]{width:185px}}
+
+/* Compact SAN move graph, with a pinned full-move ruler. */
+.graph-layout{display:block}.graph-canvas{height:690px;isolation:isolate}
+.node-hit .cardbg{transition:stroke .15s}.node-hit:hover .cardbg{stroke:#fff;stroke-width:2.8}
+.node-hit.selected .cardbg{stroke:#e9fbff;stroke-width:3}
+.node-hit.manual .cardbg{stroke-dasharray:4 3}
+.move-axis{position:absolute;z-index:3;top:0;left:0;right:0;height:41px;background:linear-gradient(180deg,#203043 0%,#182635f5 91%,#192a3acc 100%);border-bottom:1px solid #566c80;pointer-events:none;overflow:hidden;box-shadow:0 3px 12px #08131d75}
+.axis-ticks{position:absolute;inset:0;pointer-events:none}.axis-mark{position:absolute;top:0;min-width:40px;height:40px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;font-size:12px;color:#d7e8f2;font-weight:750;font-variant-numeric:tabular-nums;border-left:1px solid #57708465;border-right:1px solid #57708465}
+.axis-title{position:absolute;z-index:2;top:9px;left:10px;border-radius:5px;padding:3px 8px;background:#162433ee;color:#8fe7c7;font:800 10px system-ui,sans-serif;letter-spacing:.9px}
+.detail{position:absolute;z-index:6;top:55px;right:12px;width:min(365px,calc(100% - 20px));max-height:calc(100% - 70px);overflow:auto;padding:15px;border:1px solid #7daab2;box-shadow:0 15px 50px #05090ddd;background:#172636f9;border-radius:13px;cursor:default;touch-action:auto}
+.detail[hidden]{display:none!important}.detailinner{display:block}.detail .chessboard{max-width:234px;margin:8px auto 10px}.detail .sq{font-size:29px}
+.detail h3{margin:11px 0 5px}.detail .evalbox{padding:4px 0}.detail .comment{max-height:130px}
+.close-detail{position:sticky;top:0;float:right;z-index:7;width:29px;height:29px;border:1px solid #61798d;border-radius:7px;background:#284254;color:#f4fafc;font-size:23px;line-height:23px;cursor:pointer}
+.close-detail:hover{background:#47718b}.detail:focus-within{outline-color:#9fe9db}
+.node-label{font:750 13px system-ui,sans-serif;fill:#eaf6fa}
+@media(max-width:1100px){.detailinner{display:block}.graph-canvas{height:610px}}
+@media(max-width:660px){.graph-canvas{height:510px}.detail{top:48px;right:6px;max-height:calc(100% - 56px);width:min(345px,calc(100% - 12px));padding:12px}.axis-title{font-size:9px;padding:3px 5px}.axis-mark{font-size:10px}}
+
+.fit-floating{position:absolute;z-index:5;left:12px;top:50px;background:#285545ed;border:1px solid #80d9b5;box-shadow:0 5px 18px #020508bb;font-size:12px}.fit-floating:hover{background:#35745e}
+.th-sort{cursor:pointer;white-space:nowrap;user-select:none}.th-sort:hover{background:#36506b;color:#eafffb}.th-sort:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}.th-sort .sort-arrow{color:#8fe7c7;padding-left:4px}.node-comment{pointer-events:none}
+.graph-brand{display:flex;align-items:center;gap:14px}.graph-brand img{width:62px;height:62px;object-fit:cover;border-radius:14px;border:1px solid #32634e;flex:none}@media(max-width:660px){.graph-brand img{width:48px;height:48px}}
+</style>
+</head>
+<body><main class="wrap">
+<div class="header"><div class="graph-brand"><img src="__CHESSPRUNE_ICON__" width="62" height="62" alt="ChessPrune logo"><div><div class="eyebrow">Lichess Explorer + Stockfish · both colors</div><h1>ChessPrune <span style="color:var(--accent);font-size:14px;vertical-align:middle">· Opening Tree</span></h1><div class="sub">SAN move tree, composite importance, practical traps and exportable repertoire.</div></div></div><div class="chip" id="configChip"></div></div>
+<div class="panel warning" id="warning" hidden></div>
+<section class="kpis" id="metrics"></section>
+<section class="panel" id="filters">
+<div class="toolbar">
+ <div class="field"><label for="filterMode">Selection strategy</label><select class="input" id="filterMode"><option value="target">Target Lines · number of lines</option><option value="coverage">Coverage · opponent frequency</option></select></div>
+ <div class="field target-control"><label for="targetLines">Lines to memorize <strong id="targetValue">50</strong></label><input id="targetLines" type="range" min="1" max="160" step="1" value="50"/><input id="targetNumber" type="number" class="input" min="1" max="1000" value="50" aria-label="Exact target number of lines"/></div>
+ <div class="field target-control"><label for="minChapterLines">Minimum lines per chapter</label><input id="minChapterLines" class="input" type="number" min="0" max="20" value="2" /><div class="small muted">When the budget allows.</div></div>
+ <div class="field target-control"><label for="trapBoost">Trap priority <strong id="trapBoostValue">1.0×</strong></label><input id="trapBoost" type="range" min="0" max="3" step="0.25" value="1" /></div>
+ <div class="field coverage-control"><label for="coverage">Opponent-response coverage <strong id="coverageValue">85%</strong></label><input id="coverage" type="range" min="5" max="100" step="5" value="85"/><div class="small muted">Per-position target, not exact PGN coverage.</div></div>
+ <div class="field coverage-control"><label for="importance">Minimum importance <strong id="importanceValue">0/100</strong></label><input id="importance" type="range" min="0" max="90" step="5" value="0"/><div class="small muted">Applies to side lines (Coverage only).</div></div>
+ <div class="field"><label for="minGames">Minimum games per variation</label><input id="minGames" class="input" type="number" min="0" max="100000" value="20" /></div>
+ <div class="field"><label for="chapter">Graph view</label><select id="chapter" class="input"><option value="all">All chapters</option><option value="traps">All traps</option></select></div>
+ <div class="controls"><button id="applyBtn" class="btn primary">Apply filter</button><button id="resetBtn" class="btn">Reset filters</button><button id="clearManualBtn" class="btn">Clear manual choices</button></div>
+ <div class="controls"><button id="pgnBtn" class="btn highlight">↓ Export filtered PGN</button><button id="pngBtn" class="btn">↓ Export graph PNG</button></div>
+</div><div class="small muted" id="filterState" style="margin-top:9px" aria-live="polite"></div>
+<div class="small muted" id="targetExplanation" style="margin-top:5px">Target Lines selects complete variations using opponent-response frequencies within the PGN, position importance, traps and chapter balancing. This is a greedy heuristic, not guaranteed real-game coverage. Manual changes can alter the final count.</div></section>
+<div class="graph-layout">
+ <section class="panel graph-panel"><div class="graph-top"><div><strong>Move tree</strong><div class="small muted" id="graphSubtitle">Left to right · click a node for details · +/− to include/exclude a branch · double-click to explore</div></div><div class="controls"><label class="only"><input id="showDiscarded" type="checkbox" checked/> Show excluded</label><label class="only"><input id="collapseLinear" type="checkbox" checked/> Collapse unbranched lines</label><button id="resetChains" class="btn">Collapse chains</button><label class="only" for="graphDepth">Levels <select class="input" id="graphDepth"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="7">7</option><option value="10">10</option><option value="20">20</option></select></label><button id="upBtn" class="btn" title="Focus on parent">↑ Back</button><button id="rootBtn" class="btn">Root</button><button id="focusBtn" class="btn">Focus selection</button><button id="zoomOut" class="btn">−</button><button id="zoomIn" class="btn">+</button><button id="fitBtn" class="btn">Fit view</button></div></div>
+ <div id="graphCanvas" class="graph-canvas"><button id="fitFloating" type="button" class="btn fit-floating" title="Fit graph to view" aria-label="Fit graph to view">⤢ Fit view</button><svg id="graphSvg" xmlns="http://www.w3.org/2000/svg"><g id="graphScene"></g></svg><div id="moveAxis" class="move-axis" aria-label="Full move number axis"><div class="axis-title">MOVE</div><div id="axisTicks" class="axis-ticks"></div></div> <section class="panel detail" id="detailOverlay" hidden role="dialog" aria-modal="false" aria-label="Selected position details"><button id="closeDetail" type="button" class="close-detail" aria-label="Close details" title="Close details">×</button><div class="detailinner"><div><div class="flexrow"><span class="pill" id="statusBadge"></span><span id="trapBadge"></span></div><h2 id="boardTitle" style="margin:10px 0 2px"></h2><div class="muted small" id="chapterName"></div><div id="board" class="chessboard"></div><div class="controls" style="justify-content:center"><button class="btn" id="prevBtn">← Previous move</button><button class="btn" id="nextBtn">Next move →</button><button class="btn" id="flipBtn">Flip</button></div></div><div><div class="action-row"><button class="btn" id="branchBtn">Exclude branch</button><span class="switch-tip" id="branchHint">Affects all continuations.</span></div><h3>Variation</h3><div class="moveline" id="moveLine"></div><h3>Lichess statistics</h3><div id="positionStats"></div><h3>Engine evaluation and importance</h3><div id="evalStats"></div><div class="notice" id="trapInfo" hidden></div><h3>Move comment</h3><div class="comment" id="moveComment"></div><div id="startingCommentPanel" hidden><h3>Before the move</h3><div class="comment" id="startingComment"></div></div><h3>PGN continuations</h3><div id="nextMoves"></div></div></div></section></div>
+ <div class="graph-footer"><span class="graph-legend"><span><i class="legend-dot" style="background:#44746b"></i> Low importance</span><span><i class="legend-dot" style="background:#50bfa5"></i> High</span><span><i class="legend-dot" style="background:#f5cd76"></i> Gold border: practical trap</span><span><i class="legend-dot" style="background:#ef8b87"></i> Red border: tactical error</span></span><span id="graphCount"></span></div></section>
+
+</div>
+<section class="panel trap-panel"><div class="flexrow" style="justify-content:space-between"><div><h2 style="margin:0">All practical traps in the repertoire <span class="pill trap" id="trapTotal"></span></h2><p class="small muted">Approximately equal engine positions but unusually high <span class="side-label">Black</span> practical scores. Includes all chapters, even excluded branches.</p></div><button class="btn" id="trapGraphBtn">Show paths in graph</button></div><div class="tablewrap"><table><thead><tr><th>Chapter</th><th>Position / move</th><th>Games</th><th>Score <span class="side-label">Black</span></th><th>Evaluation</th><th>Repertoire</th><th>Actions</th></tr></thead><tbody id="trapRows"></tbody></table></div></section>
+<section class="panel" style="margin-top:13px" id="selectedLinesPanel"><div class="flexrow" style="justify-content:space-between"><div><h2 style="margin:0">Lines to memorize <span class="pill kept" id="selectedLinesCount">50</span></h2><div class="small muted">One row per terminal study line. Relative = conditional weight among PGN opponent continuations; absolute = estimated probability of the full line in the Lichess database from the chapter's starting position. Sort any column by clicking its heading.</div></div><button id="selectedLinesCSV" class="btn">↓ Export CSV</button></div><div class="tablewrap" style="margin-top:12px;max-height:420px"><table><thead><tr id="selectedLineHeaders"><th class="th-sort" data-sort="chapter" tabindex="0" role="button">Chapter <span class="sort-arrow"></span></th><th class="th-sort" data-sort="line" tabindex="0" role="button">Line / last move <span class="sort-arrow"></span></th><th class="th-sort" data-sort="relative" tabindex="0" role="button" title="Conditional probability among PGN continuations in this chapter">Relative weight <span class="sort-arrow"></span></th><th class="th-sort" data-sort="absolute" tabindex="0" role="button" title="Estimated share of all Lichess games from the chapter's initial position">Absolute weight <span class="sort-arrow"></span></th><th class="th-sort" data-sort="games" tabindex="0" role="button">Games <span class="sort-arrow"></span></th><th class="th-sort" data-sort="score" tabindex="0" role="button">Score <span class="side-label">Black</span> <span class="sort-arrow"></span></th><th class="th-sort" data-sort="eval" tabindex="0" role="button">White eval <span class="sort-arrow"></span></th><th class="th-sort" data-sort="type" tabindex="0" role="button">Type <span class="sort-arrow"></span></th></tr></thead><tbody id="selectedLineRows"></tbody></table></div></section>
+<div class="lower"><section class="panel"><h2>Filter impact on repertoire</h2><div class="tablewrap"><table class="summarytable"><thead><tr><th>Metric</th><th>Original</th><th>Filtered</th><th>Reduction</th></tr></thead><tbody id="summaryRows"></tbody></table></div><p class="help" id="coverageNote"></p><h3>Lines by chapter</h3><div class="tablewrap" style="max-height:380px"><table class="summarytable"><thead><tr><th>Chapter</th><th>Orig.</th><th>Selected</th></tr></thead><tbody id="chapterSummaryRows"></tbody></table></div><h3>Importance formula</h3><p class="help">55% frequency (log-scaled relative to chapter), 25% sample-adjusted <span class="side-label">Black</span> practical score and 20% engine evaluation from the repertoire side. +10 points for a <strong>practical trap</strong>: near-equal engine position with at least 40 games and an unusually high practical score. This is a study-priority heuristic, not an objective strength metric.</p><h3>How to explore</h3><p class="help">The graph flows left to right: drag to pan, scroll to zoom. Click a node for position details and original move comments; double-click to explore its branch. +/− includes or excludes a subtree. The smaller bottom-right control expands or collapses an unbranched chain. Manual choices override automatic filtering.</p></section>
+<section class="panel"><h2>Repertoire positions (current view)</h2><div class="searchbar"><input class="input" id="search" placeholder="Search move or variation text..."/><label class="only"><input type="checkbox" id="onlyTraps"/> Practical traps only</label><label class="only"><input type="checkbox" id="onlyKept" checked/> Included only</label><select class="input" id="sortTable"><option value="importance">Importance ↓</option><option value="n">Games ↓</option><option value="score">Repertoire-side score ↓</option><option value="depth">Depth ↑</option></select></div><div class="small muted" id="tableCount"></div><div class="tablewrap"><table><thead><tr><th>Importance</th><th>Chapter / moves</th><th>Games</th><th>Score <span class="side-label">Black</span></th><th>White eval</th><th>Type</th></tr></thead><tbody id="positionRows"></tbody></table></div></section></div>
+<footer class="foot">Source: Lichess Explorer, selected rating bands and time controls. <span class="side-label">Black</span> score = (wins + ½ draws) / games. Positive evaluations favor White; negative evaluations favor Black. A “practical trap” is a <em>statistical discrepancy</em> in a roughly equal position, not necessarily a forced tactic. Re-run Python for new evaluations or updated statistics. <span id="created"></span></footer>
+</main>
+<script>
+/*__EMBED_DATA__*/
+(function(){
+'use strict';
+const N=DATA.nodes,R=DATA.roots,CFG=DATA.config,S=DATA.summary,$=id=>document.getElementById(id);
+const SIDE=CFG.side||"black", OPPONENT=SIDE==="white"?"black":"white";
+const SIDE_LABEL=SIDE==="white"?"White":"Black", SIDE_SHORT=SIDE==="white"?"W":"B";
+const REPERTOIRE_OPTIONS=CFG.repertoire_options??CFG.black_options??1;
+const num=new Intl.NumberFormat('it-IT');
+const fmtN=x=>Number.isFinite(x)?num.format(x):'n.d.';
+const fmtPct=x=>Number.isFinite(x)?(x*100).toFixed(1)+'%':'n.d.';
+const fmtEv=e=>!e||e.cp==null?'n.d.':e.mate!=null?('matto '+(e.mate>0?'+':'')+e.mate):((e.cp>=0?'+':'')+(e.cp/100).toFixed(2));
+const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const strip=s=>String(s||'').replace(/\[%[^\]]+\]/g,'').trim();
+// PGN NAGs are distinct from numeric Stockfish scores. Keep annotations
+// authored in the PGN rather than inventing positional judgements.
+const nagGlyphs={1:'!',2:'?',3:'!!',4:'??',5:'!?',6:'?!'};
+const nagQuality={10:'=',14:'+=',15:'=+',16:'+-',17:'-+',18:'+-',19:'-+'};
+function moveAnnotation(n){
+ const nags=Array.isArray(n.nags)?n.nags:[],g=nags.map(x=>nagGlyphs[+x]).filter(Boolean).join('');
+ let q=nags.map(x=>nagQuality[+x]).find(Boolean)||'';
+ if(!q){const comment=strip((n.starting_comment||'')+' '+(n.comment||''));
+  const m=comment.match(/(?:^|[\s([;])([+\/\-=±∓]{1,3})(?=$|[\s),;.!])/);
+  if(m && ['=','+=','=+','+-','-+','+/-','-/+','±','∓'].includes(m[1]))q=m[1].replace('+/-','+-').replace('-/+','-+').replace('±','+-').replace('∓','-+');
+ }
+ return {glyph:g,quality:q};
+}
+const plyOf=n=>{
+ const f=String(n.fen||'').split(' ');const full=Math.max(1,Number(f[5])||1);
+ return 2*(full-1)+(f[1]==='b'?1:0);
+};
+const NODE_STEP=166, NODE_X0=132;
+
+const pieces={K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
+const depthLimit=1350;
+const manualActions=[];
+const expandedChains=new Set();
+const trapPath=new Set();
+for(const n of N){if(n.practical_trap){let cur=n.id;while(cur!==null){trapPath.add(cur);cur=N[cur].parent}}}
+let viewMode='chapter';
+let selected=R[0],focus=R[0],chapter=N[focus].chapter,flipped=SIDE==="black";
+let kept=new Set(N.filter(n=>n.keep).map(n=>n.id));
+let applied={mode:CFG.filter_mode||'target',target:CFG.target_lines||50,minChapter:CFG.min_chapter_lines??2,trapBoost:CFG.trap_boost??1,coverage:CFG.coverage,minGames:CFG.min_games,minImportance:CFG.min_importance||0};
+let targetResult=null;
+let graphData={items:[],edges:[],width:800,height:500,minPly:0,maxPly:0};
+let transform={x:20,y:20,k:1};
+const boardRows=fen=>fen.split(' ')[0].split('/').map(row=>{let arr=[];for(let c of row)if(/[1-8]/.test(c))for(let i=0;i<+c;i++)arr.push(null);else arr.push(c);return arr});
+const rootOf=id=>R[N[id].chapter];
+const stats=n=>n?.stats, games=n=>stats(n)?.n??null;
+const hasComment=n=>Boolean(strip(n.comment)||strip(n.starting_comment));
+const badge=n=>n.practical_trap?'PRACTICAL TRAP':n.trap?.confirmed?'TACTICAL ERROR':'';
+function graphColor(v){let t=Math.max(0,Math.min(1,Number(v)/100));let lo=[43,73,91],hi=[45,180,143];return '#'+lo.map((q,i)=>Math.round(q+(hi[i]-q)*t).toString(16).padStart(2,'0')).join('')}
+function setView(value){
+ if(value==='all'||value==='traps'){
+  viewMode=value;focus=-1;chapter=N[selected].chapter;
+ }else{
+  viewMode='chapter';chapter=+value;selected=R[chapter];focus=selected;
+ }
+ $('chapter').value=String(value);
+ showSelected();drawGraph(true);renderTable();
+}
+function subtree(id,fn){let stack=[id];while(stack.length){let cur=stack.pop();fn(cur);stack.push(...N[cur].children)}}
+function updateKept(){
+ for(const act of manualActions){
+  if(act.include){let ancestor=act.id;while(ancestor!==null){kept.add(ancestor);ancestor=N[ancestor].parent}subtree(act.id,x=>kept.add(x))}
+  else subtree(act.id,x=>kept.delete(x));
+ }
+ N.forEach(n=>n.filtered=kept.has(n.id));
+}
+function toggleBranch(id){
+ const include=!kept.has(id);
+ manualActions.push({id,include});
+ updateKept();
+ if(!include)$('showDiscarded').checked=true;
+ refreshAfterChange();
+}
+function refreshAfterChange(){
+ const count=kept.size,total=N.length;
+ const leaves=N.filter(n=>kept.has(n.id)&&!n.children.some(c=>kept.has(c))).length;
+ $('filterState').textContent=(applied.mode==='target'?`Target ${applied.target} lines (automatically selected ${targetResult?.leafIds.length||0}; effective ${leaves}) · at least ${applied.minChapter}/chapter · trap boost ${applied.trapBoost.toFixed(2)}×`:`Coverage ${Math.round(applied.coverage*100)}% · importance threshold ${applied.minImportance}/100`)+` · ${fmtN(count)}/${fmtN(total)} nodes · ${manualActions.length} manual choices.`;
+ drawGraph(true);showSelected();renderSummary();renderTable();renderTrapTable();renderSelectedLines();
+}
+function applyCoverageFilter(){
+ let coverage=+$('coverage').value/100,minGames=Math.max(0,+$('minGames').value||0),minImportance=+$('importance').value;
+ kept=new Set();
+ function visit(id){kept.add(id);const node=N[id];if(!node.children.length)return;let chosen=[];
+  if(node.turn===SIDE){chosen=node.children.slice(0,Math.max(1,REPERTOIRE_OPTIONS))}
+  else{
+   let known=node.children.map(id=>N[id]).filter(c=>c.edge_known&&games(c)!==null).sort((a,b)=>(b.importance-a.importance)||(games(b)-games(a)));
+   let unknown=node.children.filter(id=>!(N[id].edge_known&&games(N[id])!==null));let count=0,parentN=games(node);
+   for(const c of known){if(chosen.length&&parentN&&count/parentN>=coverage)break;if(chosen.length&&((games(c)<minGames)||(c.importance<minImportance)))continue;chosen.push(c.id);count+=games(c)||0}
+   chosen.push(...unknown);
+   if(CFG.keep_traps){chosen.push(...node.children.filter(id=>N[id].trap?.confirmed&&(games(N[id])||0)>=(CFG.trap_min_games||10)))}
+   chosen=[...new Set(chosen)];if(!chosen.length)chosen=[node.children[0]];
+  }
+  for(const id of chosen)visit(id)
+ }
+ R.forEach(visit);
+}
+
+// TARGET LINES: stable greedy selection of complete original leaf variations.
+// Opponent branches are weighted by Lichess counts RELATIVE TO OTHER
+// CONTINUATIONS IN THE PGN; repertoire moves follow the first authored move.
+// Selecting K distinct leaves yields exactly K terminal lines before manual edits.
+function buildTargetCandidates(){
+ const prob=new Map(),byChapter=R.map(()=>[]);
+ function walk(id,path,p,ch){let n=N[id];path=[...path,id];prob.set(id,p);
+  if(!n.children.length){byChapter[ch].push(path);return}
+  if(n.turn===SIDE){for(const cid of n.children.slice(0,Math.max(1,REPERTOIRE_OPTIONS)))walk(cid,path,p,ch)}
+  else{let ws=n.children.map(cid=>Math.max(1,games(N[cid])||0)),sum=ws.reduce((a,b)=>a+b,0);
+   n.children.forEach((cid,i)=>walk(cid,path,p*ws[i]/sum,ch))}
+ }
+ R.forEach((root,ch)=>walk(root,[],1,ch));return {prob,byChapter};
+}
+const TARGET_CANDIDATES=buildTargetCandidates();
+function selectTargetLines(target=50,minChapter=2,minGames=20,trapBoost=1){
+ const {prob,byChapter}=TARGET_CANDIDATES;
+ const cap=Math.min(Math.max(0,Math.floor(target)),byChapter.reduce((a,v)=>a+v.length,0));
+ const selected=new Set(),taken=new Set(),leafIds=[],counts=R.map(()=>0);
+ function gain(path,ch){let fresh=path.map(id=>N[id]).filter(n=>!selected.has(n.id));if(!fresh.length)return -1;
+  let main=fresh.reduce((s,n)=>s+prob.get(n.id)*(.60+.40*Math.max(0,Math.min(100,n.importance||0))/100),0)/fresh.length;
+  main*=1+.10*Math.log2(1+fresh.length);
+  let rarity=.30+.70*Math.min(1,(games(fresh[0])||0)/Math.max(1,minGames));
+  let bonus=0;
+  for(const n of fresh)if(n.practical_trap||n.trap?.confirmed){
+   let k=games(n)||0,confidence=Math.sqrt(k/(k+100)),reach=Math.max(.15,Math.pow(prob.get(n.id),.30));
+   bonus+=.08*confidence*reach*(n.practical_trap?1:.65);
+  }
+  return (main*rarity+trapBoost*bonus)/(1+.12*counts[ch]);
+ }
+ function choose(onlyChapter=null){let best=null,bestScore=-Infinity,bestLeaf=Infinity;
+  byChapter.forEach((paths,ch)=>{if(onlyChapter!==null&&onlyChapter!==ch)return;
+   for(const path of paths){let leaf=path[path.length-1];if(taken.has(leaf))continue;
+    let g=gain(path,ch);if(g>bestScore+1e-12||(Math.abs(g-bestScore)<=1e-12&&leaf<bestLeaf)){
+      bestScore=g;bestLeaf=leaf;best={path,ch,leaf}
+    }
+   }
+  });
+  if(!best)return false;best.path.forEach(id=>selected.add(id));taken.add(best.leaf);leafIds.push(best.leaf);counts[best.ch]++;return true;
+ }
+ for(let round=0;round<Math.max(0,minChapter);round++)for(let ch=0;ch<R.length&&taken.size<cap;ch++){
+  if(counts[ch]<byChapter[ch].length)choose(ch)
+ }
+ while(taken.size<cap)if(!choose())break;
+ return {nodes:selected,leafIds,counts,available:byChapter.reduce((a,v)=>a+v.length,0)};
+}
+function applyFilter(){
+ applied={mode:$('filterMode').value,target:Math.max(1,Math.floor(+$('targetNumber').value||50)),minChapter:Math.max(0,Math.floor(+$('minChapterLines').value||0)),trapBoost:+$('trapBoost').value,
+  coverage:+$('coverage').value/100,minGames:Math.max(0,+$('minGames').value||0),minImportance:+$('importance').value};
+ targetResult=null;
+ if(applied.mode==='target'){
+  targetResult=selectTargetLines(applied.target,applied.minChapter,applied.minGames,applied.trapBoost);
+  kept=new Set(targetResult.nodes);
+ } else applyCoverageFilter();
+ updateKept();refreshAfterChange();
+}
+function uiInit(){
+ document.querySelectorAll('.side-label').forEach(el=>{el.textContent=SIDE_LABEL});
+ $('configChip').textContent=`Repertoire ${SIDE_LABEL} · `+(CFG.dry_run?`TEST ${CFG.sampled_lines} lines · `:'')+CFG.speeds.replace(',',' + ')+' · '+CFG.ratings+' Elo Lichess';
+ $('coverage').value=Math.round(CFG.coverage*100);$('importance').value=CFG.min_importance||0;$('minGames').value=CFG.min_games;
+ $('filterMode').value=CFG.filter_mode||'target';
+ const capacity=TARGET_CANDIDATES.byChapter.reduce((a,b)=>a+b.length,0);
+ $('targetLines').max=Math.max(1,capacity);$('targetNumber').max=Math.max(1,capacity);
+ $('targetLines').value=Math.min(capacity,CFG.target_lines||50);$('targetNumber').value=$('targetLines').value;
+ $('minChapterLines').value=CFG.min_chapter_lines??2;$('trapBoost').value=CFG.trap_boost??1;
+ function showControls(){let target=$('filterMode').value==='target';document.querySelectorAll('.target-control').forEach(x=>x.hidden=!target);document.querySelectorAll('.coverage-control').forEach(x=>x.hidden=target)}
+ showControls();
+ $('filterMode').addEventListener('change',()=>{showControls();updatePreview()});
+ $('targetLines').addEventListener('input',()=>{$('targetNumber').value=$('targetLines').value;updatePreview()});
+ $('targetNumber').addEventListener('input',()=>{$('targetLines').value=Math.max(1,Math.min(capacity,+$('targetNumber').value||1));updatePreview()});
+ function updatePreview(){$('coverageValue').textContent=$('coverage').value+'%';$('importanceValue').textContent=$('importance').value+'/100';$('targetValue').textContent=$('targetNumber').value;$('trapBoostValue').textContent=(+$('trapBoost').value).toFixed(2)+'×';$('filterState').textContent='Parameters changed: click Apply filter. Manual selections will be preserved.'}
+ ['coverage','importance','minGames','minChapterLines','trapBoost'].forEach(id=>$(id).addEventListener('input',updatePreview));
+ $('applyBtn').addEventListener('click',applyFilter);
+ $('resetBtn').addEventListener('click',()=>{
+  $('filterMode').value=CFG.filter_mode||'target';
+  $('targetLines').value=Math.min(capacity,CFG.target_lines||50);$('targetNumber').value=$('targetLines').value;
+  $('minChapterLines').value=CFG.min_chapter_lines??2;$('trapBoost').value=CFG.trap_boost??1;
+  $('coverage').value=Math.round(CFG.coverage*100);$('importance').value=CFG.min_importance||0;$('minGames').value=CFG.min_games;
+  showControls();updatePreview();applyFilter()
+ });
+ $('clearManualBtn').addEventListener('click',()=>{manualActions.length=0;applyFilter()});
+ R.forEach((id,i)=>{let opt=document.createElement('option');opt.value=String(i);opt.textContent=N[id].chapter_name;$('chapter').append(opt)});
+ $('chapter').addEventListener('change',e=>setView(e.target.value));
+ $('trapGraphBtn').addEventListener('click',()=>setView('traps'));
+ $('metrics').innerHTML=[['Chapters',S.chapters],['Distinct positions',S.positions],['Lichess statistics',`${fmtN(S.queried)} / ${fmtN(S.positions)}`],['Engine evaluations',`${fmtN(S.eval_found)} / ${fmtN(S.eval_attempted)}`],['PGN nodes',S.nodes]].map(([t,v])=>`<div class="kpi"><strong>${h(v)}</strong><span>${h(t)}</span></div>`).join('');
+ const warnings=[];if(CFG.dry_run)warnings.push(`DRY RUN: this dashboard contains only ${CFG.sampled_lines} lines of ${CFG.available_lines} original lines. Exported PGN is a sample, not the complete repertoire.`);
+ if(S.queried<S.positions||S.eval_found<S.eval_attempted)warnings.push(`Incomplete data: ${S.queried}/${S.positions} positions with Lichess stats and ${S.eval_found}/${S.eval_attempted} requested engine evaluations. A missing evaluation does NOT mean equality.`);
+ if(warnings.length){$('warning').hidden=false;$('warning').textContent=warnings.join(' · ')}
+ $('created').textContent='Generated '+CFG.created;
+ $('showDiscarded').addEventListener('change',()=>drawGraph(true));$('graphDepth').addEventListener('change',()=>drawGraph(true));
+ $('collapseLinear').addEventListener('change',()=>drawGraph(true));
+ $('resetChains').addEventListener('click',()=>{expandedChains.clear();$('collapseLinear').checked=true;drawGraph(true)});
+ $('fitBtn').addEventListener('click',fitGraph);$('fitFloating').addEventListener('click',fitGraph);$('zoomIn').addEventListener('click',()=>zoomCenter(1.25));$('zoomOut').addEventListener('click',()=>zoomCenter(.8));
+ $('upBtn').addEventListener('click',()=>{if(viewMode!=='chapter')return;let p=N[focus].parent;if(p!==null)focusAt(p)});
+ $('rootBtn').addEventListener('click',()=>{if(viewMode==='chapter')focusAt(R[chapter]);else drawGraph(true)});
+ $('focusBtn').addEventListener('click',()=>focusAt(selected));
+ $('prevBtn').addEventListener('click',()=>{let p=N[selected].parent;if(p!==null)select(p)});
+ $('nextBtn').addEventListener('click',()=>{if(N[selected].children.length)select(N[selected].children[0])});
+ $('flipBtn').addEventListener('click',()=>{flipped=!flipped;showBoard();drawGraph(false)});
+ $('branchBtn').addEventListener('click',()=>toggleBranch(selected));
+ $('closeDetail').addEventListener('click',()=>{$('detailOverlay').hidden=true});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')$('detailOverlay').hidden=true});
+ $('pgnBtn').addEventListener('click',exportPGN);$('pngBtn').addEventListener('click',exportPNG);$('selectedLinesCSV').addEventListener('click',exportLinesCSV);
+ ['search','onlyTraps','onlyKept','sortTable'].forEach(id=>$(id).addEventListener('input',renderTable));
+ initLineSort();initPanZoom();setView('all');applyFilter();
+}
+function select(id){selected=id;chapter=N[id].chapter;if(viewMode==='chapter')$('chapter').value=String(chapter);showSelected();markSelection();$('detailOverlay').hidden=false}
+function focusAt(id){chapter=N[id].chapter;viewMode='chapter';$('chapter').value=String(chapter);focus=id;selected=id;showSelected();drawGraph(true);renderTable();$('detailOverlay').hidden=false}
+function openTrap(id){let parent=N[id].parent;focusAt(parent===null?id:parent);select(id);$('graphCanvas').scrollIntoView({behavior:'smooth',block:'center'})}
+function showBoard(){const n=N[selected],rows=boardRows(n.fen);let sq='';for(let y=0;y<8;y++)for(let x=0;x<8;x++){let ri=flipped?7-y:y,fi=flipped?7-x:x,p=rows[ri][fi],dark=(fi+(8-ri))%2===1,square='abcdefgh'[fi]+(8-ri),last=n.uci&&(square===n.uci.slice(0,2)||square===n.uci.slice(2,4));sq+=`<div class="sq ${dark?'d':'l'} ${last?'last':''}"><span class="${p&&p===p.toUpperCase()?'wp':'bp'}">${pieces[p]||''}</span></div>`}$('board').innerHTML=sq}
+function showSelected(){const n=N[selected],s=n.stats;
+ $('boardTitle').textContent=n.san?((n.turn==='black'?'White: ':'Black: ')+n.san+moveAnnotation(n).glyph+(moveAnnotation(n).quality?' '+moveAnnotation(n).quality:'')):'Initial position';$('chapterName').textContent=n.chapter_name;
+ $('branchBtn').textContent=kept.has(n.id)?'− Exclude branch and continuations':'+ Include branch and continuations';$('branchBtn').className='btn '+(kept.has(n.id)?'':'primary');
+ $('statusBadge').textContent=kept.has(n.id)?'INCLUDED':'EXCLUDED';$('statusBadge').className='pill '+(kept.has(n.id)?'kept':'off');
+ $('trapBadge').innerHTML=n.practical_trap?'<span class="pill trap">PRACTICAL TRAP</span>':n.trap?.confirmed?'<span class="pill bad">TACTICAL ERROR</span>':'';
+ $('moveLine').textContent=n.line||'Initial position';showBoard();
+ $('positionStats').innerHTML=s?`<div class="evalbox"><span>Games</span><b>${fmtN(s.n)}</b></div><div class="evalbox"><span>Score for ${SIDE_LABEL}</span><b>${fmtPct(s.score)}</b></div><div class="evalbox"><span>White wins / draws / Black wins</span><b>${fmtN(s.white)} / ${fmtN(s.draws)} / ${fmtN(s.black)}</b></div>`:'<p class="muted small">No statistics available.</p>';
+ $('evalStats').innerHTML=`<div class="evalbox"><span>Evaluation from White perspective</span><b>${fmtEv(n.eval)}</b></div><div class="evalbox"><span>Importance</span><b>${n.importance.toFixed(1)} / 100</b></div><p class="small muted">${n.eval?`${h(n.eval.source)}, depth ${fmtN(n.eval.depth)}`:'Evaluation unavailable'}</p>`;
+ const trap=n.practical_trap;$('trapInfo').hidden=!trap;$('trapInfo').textContent=trap?`Practical trap: score ${SIDE_LABEL} ${fmtPct(trap.score)} vs ${fmtPct(trap.expected)} expected from evaluation (rough estimate). Eval ${fmtEv(n.eval)}; ${fmtN(trap.n)} games. Not necessarily a forced line.`:'';
+ $('moveComment').textContent=strip(n.comment)||'No comment for this move.';
+ $('startingCommentPanel').hidden=!strip(n.starting_comment);
+ $('startingComment').textContent=strip(n.starting_comment);
+ $('prevBtn').disabled=n.parent===null;$('nextBtn').disabled=!n.children.length;
+ $('nextMoves').innerHTML=n.children.length?n.children.map(id=>{let c=N[id];return `<button class="next-btn ${kept.has(id)?'':'dim'}" data-node="${id}"><b>${h(c.san)}</b> · ${fmtN(games(c))} games · ${fmtPct(c.stats?.score)} · ${fmtEv(c.eval)} <small>Importance ${c.importance.toFixed(0)}/100 ${badge(c)?'· '+h(badge(c)):''}</small></button>`}).join(''):'<p class="small muted">End of this PGN variation.</p>';
+ $('nextMoves').querySelectorAll('[data-node]').forEach(b=>b.addEventListener('click',()=>{focusAt(+b.dataset.node)}))
+}
+function renderSummary(){let total=N.length,ret=kept.size,orLeaves=N.filter(n=>!n.children.length).length;
+ let filteredLeaves=N.filter(n=>kept.has(n.id)&&!n.children.some(c=>kept.has(c))).length;
+ let allKeys=new Set(N.map(n=>n.key)),keptKeys=new Set(N.filter(n=>kept.has(n.id)).map(n=>n.key));
+ let practical=N.filter(n=>n.practical_trap), practicalKept=practical.filter(n=>kept.has(n.id));
+ let tactical=N.filter(n=>n.trap?.confirmed),tacticalKept=tactical.filter(n=>kept.has(n.id));
+ const rows=[['Chapters',R.length,R.filter(id=>kept.has(id)).length],['Nodes (moves/positions)',total,ret],['Distinct FEN positions',allKeys.size,keptKeys.size],['Terminal lines',orLeaves,filteredLeaves],['Practical traps',practical.length,practicalKept.length],['Tactical errors',tactical.length,tacticalKept.length]];
+ $('summaryRows').innerHTML=rows.map(([label,a,b])=>`<tr><td>${label}</td><td class="mono">${fmtN(a)}</td><td class="important mono">${fmtN(b)}</td><td class="mono">${a?((1-b/a)*100).toFixed(1)+'%':'—'}</td></tr>`).join('');
+ $('chapterSummaryRows').innerHTML=R.map((root,ch)=>{
+  let a=N.filter(n=>n.chapter===ch&&!n.children.length).length;
+  let b=N.filter(n=>n.chapter===ch&&kept.has(n.id)&&!n.children.some(cid=>kept.has(cid))).length;
+  return `<tr><td>${h(N[root].chapter_name)}</td><td class="mono">${a}</td><td class="important mono">${b}</td></tr>`
+ }).join('');
+ // Relative mass of originally represented opponent continuations; own
+ // repertoire moves are deliberate choices, not random outcomes.
+ function relativeRetention(id){let n=N[id];if(!kept.has(id))return 0;let all=n.children;if(!all.length)return 1;
+  if(n.turn===SIDE)return Math.max(0,...all.map(relativeRetention));
+  let weights=all.map(cid=>{let c=N[cid];return c.edge_known&&games(c)!==null?games(c):null});
+  if(weights.every(w=>w!==null)&&weights.reduce((a,b)=>a+b,0)>0){let denom=weights.reduce((a,b)=>a+b,0);return all.reduce((acc,cid,i)=>acc+weights[i]/denom*relativeRetention(cid),0)}
+  return null;
+ }
+ let vals=R.map(relativeRetention);let safe=vals.every(v=>v!==null);
+ $('coverageNote').textContent=safe?`Estimated relative share of original repertoire retained: ${(vals.reduce((a,b)=>a+b,0)/vals.length*100).toFixed(1)}% (unweighted average across ${R.length} chapters; denominators limited to PGN continuations, not all Lichess moves).`:'Relative coverage cannot be estimated reliably: some continuations lack stats. Node reduction figures remain exact.';
+}
+function absoluteLineWeight(node){
+ let ratio=1,cur=node;
+ while(cur.parent!==null){
+  const parent=N[cur.parent],total=games(parent),n=games(cur);
+  if(!Number.isFinite(total)||total<=0||!Number.isFinite(n)||n<0)return null;
+  ratio*=Math.max(0,Math.min(1,n/total));cur=parent;
+ }
+ return ratio;
+}
+function formatWeight(p){
+ if(p==null||!Number.isFinite(p))return 'n/a';
+ const percent=p*100;
+ if(percent===0)return '0%';
+ if(percent>=1)return percent.toFixed(2)+'%';
+ if(percent>=0.01)return percent.toFixed(3)+'%';
+ if(percent>=1e-6)return percent.toPrecision(3)+'%';
+ return percent.toExponential(2)+'%';
+}
+let selectedLineSort={key:'relative',direction:'desc'};
+const lineType=n=>n.practical_trap?'Practical':n.trap?.confirmed?'Tactical':'—';
+function sortSelectedLines(rows){const {key,direction}=selectedLineSort,sign=direction==='asc'?1:-1;
+ const value=n=>({chapter:()=>n.chapter_name,line:()=>n.line,relative:()=>TARGET_CANDIDATES.prob.get(n.id)??null,absolute:()=>absoluteLineWeight(n),games:()=>games(n),score:()=>n.stats?.score??null,eval:()=>n.eval?.mate!=null?(n.eval.mate>0?100000:-100000):n.eval?.cp??null,type:()=>lineType(n)})[key]();
+ return [...rows].sort((a,b)=>{let x=value(a),y=value(b);if(x==null&&y==null)return a.id-b.id;if(x==null)return 1;if(y==null)return -1;
+  const c=typeof x==='string'?String(x).localeCompare(String(y),'en',{numeric:true}):x-y;
+  return c===0?a.id-b.id:sign*c;
+ });
+}
+function initLineSort(){document.querySelectorAll('#selectedLineHeaders [data-sort]').forEach(th=>{
+ const sort=()=>{const key=th.dataset.sort;if(selectedLineSort.key===key)selectedLineSort.direction=selectedLineSort.direction==='desc'?'asc':'desc';else selectedLineSort={key,direction:['chapter','line','type'].includes(key)?'asc':'desc'};renderSelectedLines()};
+ th.addEventListener('click',sort);th.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sort()}});
+ });}
+function currentTerminalLines(){return N.filter(n=>kept.has(n.id)&&!n.children.some(c=>kept.has(c))).sort((a,b)=>(TARGET_CANDIDATES.prob.get(b.id)||0)-(TARGET_CANDIDATES.prob.get(a.id)||0)||b.importance-a.importance)}
+function renderSelectedLines(){
+ const rows=sortSelectedLines(currentTerminalLines());$('selectedLinesCount').textContent=rows.length+' lines';
+ document.querySelectorAll('#selectedLineHeaders [data-sort]').forEach(th=>{
+  const active=th.dataset.sort===selectedLineSort.key;
+  th.querySelector('.sort-arrow').textContent=active?(selectedLineSort.direction==='asc'?'▲':'▼'):'↕';
+  th.setAttribute('aria-sort',active?(selectedLineSort.direction==='asc'?'ascending':'descending'):'none');
+ });
+ $('selectedLineRows').innerHTML=rows.map(n=>{
+  const relative=TARGET_CANDIDATES.prob.get(n.id),absolute=absoluteLineWeight(n);
+  return `<tr class="clickable" data-line="${n.id}"><td>${h(n.chapter_name)}</td><td><b>${h(n.san)}</b><div class="small muted">${h(n.line)}</div></td><td class="mono">${formatWeight(relative)}</td><td class="mono">${formatWeight(absolute)}</td><td class="mono">${fmtN(games(n))}</td><td>${fmtPct(n.stats?.score)}</td><td>${fmtEv(n.eval)}</td><td>${h(lineType(n))}</td></tr>`
+ }).join('');
+ $('selectedLineRows').querySelectorAll('[data-line]').forEach(row=>row.addEventListener('click',()=>openTrap(+row.dataset.line)));
+}
+function exportLinesCSV(){const rows=sortSelectedLines(currentTerminalLines());
+ const fields=['Chapter','Variation','Relative_weight_chapter','Absolute_weight_Lichess','Games','Score_'+SIDE_LABEL,'White_eval_cp','Importance','Type'];
+ const csvCell=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
+ const text=[fields,...rows.map(n=>[n.chapter_name,n.line,TARGET_CANDIDATES.prob.get(n.id)??'',absoluteLineWeight(n)??'',games(n),n.stats?.score??'',n.eval?.cp??'',n.importance,lineType(n)])].map(row=>row.map(csvCell).join(';')).join('\r\n');
+ downloadBlob('\ufeff'+text,`study_lines_${rows.length}.csv`,'text/csv;charset=utf-8');
+}
+function renderTrapTable(){
+ const traps=N.filter(n=>n.practical_trap).sort((a,b)=>(games(b)||0)-(games(a)||0)||b.importance-a.importance);
+ $('trapTotal').textContent=`${fmtN(traps.length)} positions`;
+ $('trapRows').innerHTML=traps.length?traps.map(n=>`<tr class="${kept.has(n.id)?'':'dim'}"><td>${h(n.chapter_name)}</td><td><b>${h(n.san)}</b><div class="small muted">${h(n.line)}</div></td><td class="mono">${fmtN(games(n))}</td><td class="mono">${fmtPct(n.stats?.score)}</td><td class="mono">${fmtEv(n.eval)}</td><td>${kept.has(n.id)?'<span class="pill kept">Included</span>':'<span class="pill off">Excluded</span>'}</td><td><button class="btn trap-open" data-trap="${n.id}">Open in graph</button></td></tr>`).join(''):'<tr><td colspan="7">No practical traps found with the current criteria and evaluations.</td></tr>';
+ $('trapRows').querySelectorAll('[data-trap]').forEach(b=>b.addEventListener('click',()=>openTrap(+b.dataset.trap)));
+}
+function renderTable(){
+ let text=$('search').value.trim().toLowerCase(),onlyTrap=$('onlyTraps').checked||viewMode==='traps',onlyKept=$('onlyKept').checked,sorting=$('sortTable').value;
+ let list=N.filter(n=>(viewMode!=='chapter'||n.chapter===chapter)&&n.depth>=1&&(!onlyKept||kept.has(n.id))&&(!onlyTrap||n.practical_trap)&&(!text||(n.chapter_name+' '+n.line+' '+n.comment+' '+n.san).toLowerCase().includes(text)));
+ list.sort((a,b)=>sorting==='score'?(b.stats?.score??-1)-(a.stats?.score??-1):sorting==='n'?(games(b)||0)-(games(a)||0):sorting==='depth'?a.depth-b.depth:b.importance-a.importance);
+ $('tableCount').textContent=`${fmtN(list.length)} positions ${viewMode==='chapter'?'in chapter':viewMode==='traps'?'traps':'across all chapters'}; first ${Math.min(500,list.length)} shown.`;
+ $('positionRows').innerHTML=list.slice(0,500).map(n=>`<tr class="clickable ${kept.has(n.id)?'':'dim'}" data-id="${n.id}"><td><b style="color:${graphColor(n.importance)}">${n.importance.toFixed(0)}</b>/100</td><td><b>${h(n.san||'Start')}</b><div class="small muted">${h(n.chapter_name)} · ${h(n.line)}</div></td><td class="mono">${fmtN(games(n))}</td><td class="mono">${fmtPct(n.stats?.score)}</td><td class="mono">${fmtEv(n.eval)}</td><td>${n.practical_trap?'<span class="pill trap">Practical</span>':n.trap?.confirmed?'<span class="pill bad">Tactical</span>':'—'}</td></tr>`).join('');
+ $('positionRows').querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',()=>openTrap(+tr.dataset.id)));
+}
+function visibleChildren(id){
+ return N[id].children.filter(cid=>viewMode==='traps'?trapPath.has(cid):$('showDiscarded').checked||kept.has(cid));
+}
+function chainTrail(id){
+ const trail=[];let cur=id;
+ while(true){let kids=visibleChildren(cur);if(kids.length!==1)break;
+  let next=kids[0];if(N[next].practical_trap||N[next].trap?.confirmed||N[next].nags?.length||hasComment(N[next])||kept.has(next)!==kept.has(cur))break;
+  let nextKids=visibleChildren(next);if(nextKids.length>1)break;
+  trail.push(next);cur=next;
+  if(!nextKids.length)break;
+ }
+ return trail;
+}
+function graphSubset(){
+ const maxDepth=viewMode==='traps'?Infinity:+$('graphDepth').value;
+ const items=[],edges=[],childMap=new Map();let maxSeen=0;
+ const starts=(viewMode==='chapter'?[focus]:R.filter(root=>viewMode!=='traps'||trapPath.has(root)));
+ function walk(id,d,expandedContext){
+  if(items.length>=depthLimit)return;
+  const forceExpand=expandedChains.has(id),expandFromHere=forceExpand||expandedContext;
+  const canToggle=id>=0&&!expandedContext&&chainTrail(id).length>0;
+  const trail=id>=0&&$('collapseLinear').checked&&!expandFromHere?chainTrail(id):[];
+  const endpoint=trail.length?trail[trail.length-1]:id;
+  const children=visibleChildren(endpoint);
+  const entry={id,d,hidden:trail.length,toggle:canToggle||forceExpand,open:forceExpand};
+  entry.ply=plyOf(N[id]);
+  items.push(entry);maxSeen=Math.max(maxSeen,d);
+  if(d>=maxDepth)return;
+  for(const child of children){if(items.length>=depthLimit)break;
+   const nextExpansion=expandFromHere&&id>=0&&visibleChildren(id).length===1&&endpoint===id;
+   edges.push({a:id,b:child,skip:trail.length});
+   if(!childMap.has(id))childMap.set(id,[]);childMap.get(id).push(child);
+   walk(child,d+1,nextExpansion);
+  }
+ }
+ starts.forEach(root=>walk(root,0,false));
+ const lookup=new Map(items.map(it=>[it.id,it]));let slots=0;
+ function layout(id){const it=lookup.get(id);if(!it)return 0;
+  const children=childMap.get(id)||[];
+  it.y=children.length?(children.map(layout).reduce((a,b)=>a+b,0)/children.length):(slots++*76+86);
+  it.x=NODE_X0+it.ply*NODE_STEP;return it.y;
+ }
+ starts.forEach(layout);
+ const minPly=items.length?Math.min(...items.map(it=>it.ply)):0,maxPly=items.length?Math.max(...items.map(it=>it.ply)):0;
+ return {items,edges,minPly,maxPly,width:Math.max(350,NODE_X0+(maxPly+1)*NODE_STEP),height:Math.max(310,slots*76+120),limited:items.length>=depthLimit};
+}
+// Positions are shown only inside the closable details popover.
+function graphElements(){
+ const g=graphSubset();graphData=g;const loc=new Map(g.items.map(it=>[it.id,it])),out=[];
+ for(const e of g.edges){const a=loc.get(e.a),b=loc.get(e.b);if(!a||!b)continue;
+  const cx=(a.x+b.x)/2;
+  out.push(`<path class="edge" d="M ${a.x+74} ${a.y} C ${cx} ${a.y},${cx} ${b.y},${b.x-74} ${b.y}" stroke="#738da0" stroke-width="2" opacity=".7"/>`);
+  if(e.skip)out.push(`<text x="${cx}" y="${(a.y+b.y)/2-9}" text-anchor="middle" fill="#bacddd" font-size="11" stroke="#0e1822" stroke-width="4" paint-order="stroke">+${e.skip} half-moves</text>`);
+ }
+ for(const it of g.items){
+  const x=it.x-74,y=it.y-23;
+  const n=N[it.id],isKept=kept.has(n.id),pr=!!n.practical_trap,tactical=!!n.trap?.confirmed,annotation=moveAnnotation(n);
+  const whiteMove=n.parent!==null&&n.turn==='black',root=n.parent===null;
+  const dot= root?'#8ca4b5':whiteMove?'#f5f4eb':'#1b2430';
+  const border=pr?'#f1ce7e':tactical?'#eb898b':isKept?'#65859d':'#ae6b73';
+  out.push(`<g class="node-hit ${n.id===selected?'selected':''} ${manualActions.some(a=>a.id===n.id)?'manual':''}" data-id="${n.id}" opacity="${isKept?1:.46}">`);
+  out.push(`<title>${h(n.san||n.chapter_name)}${h(annotation.glyph)} ${h(annotation.quality)} · ${fmtN(games(n))} games · ${fmtPct(n.stats?.score)} · ${fmtEv(n.eval)}</title>`);
+  out.push(`<rect class="cardbg" x="${x}" y="${y}" width="148" height="46" rx="10" fill="#1a2b3b" stroke="${border}" stroke-width="${pr||tactical?2.7:1.5}"/>`);
+  out.push(`<rect x="${x+3}" y="${y+41}" width="${Math.min(142,Math.max(2,(n.importance||0)/100*142))}" height="3.5" rx="2" fill="${graphColor(n.importance)}"/>`);
+  out.push(`<circle cx="${x+15}" cy="${y+18}" r="7.6" fill="${dot}" stroke="${whiteMove?'#bcccd6':'#8394a3'}" stroke-width="1.7"/>`);
+  let notation=n.san||n.chapter_name||'Start';if(notation.length>11)notation=notation.slice(0,10)+'…';
+  out.push(`<text x="${x+28}" y="${y+23}" class="node-label">${h(notation)}${h(annotation.glyph)}</text>`);
+  if(hasComment(n))out.push(`<g class="node-comment" aria-label="Move comment available"><rect x="${x+96}" y="${y+4}" width="18" height="17" rx="5" fill="#38546b" stroke="#9cbcd2"/><text x="${x+105}" y="${y+16.5}" text-anchor="middle" font-size="12" fill="#e5f3ff">▤</text></g>`);
+  if(annotation.quality)out.push(`<text x="${x+29}" y="${y+36}" font-size="10.5" fill="#d9d2fa" font-weight="800">${h(annotation.quality)}</text>`);
+  if(pr||tactical)out.push(`<text x="${x+110}" y="${y+37}" font-size="13" text-anchor="middle" fill="${pr?'#f5cd76':'#ef8b87'}">${pr?'★':'⚠'}</text>`);
+
+  out.push(`<g class="branch-toggle" data-branch="${n.id}" role="button" aria-label="${isKept?'Exclude':'Include'} branch ${h(n.san)}"><title>${isKept?'Exclude':'Include'} this branch</title><rect x="${x+121}" y="${y+4}" width="21" height="20" rx="5" fill="${isKept?'#345b4d':'#6b444b'}" stroke="${isKept?'#91dfb8':'#f1b5ba'}"/><text x="${x+131.5}" y="${y+19}" text-anchor="middle" fill="white" font-weight="bold" font-size="16">${isKept?'−':'+'}</text></g>`);
+  if(it.toggle)out.push(`<g class="chain-toggle" data-chain="${n.id}" role="button" aria-label="${it.open?'Collapse':'Expand'} line"><title>${it.open?'Collapse':'Expand'} sequence</title><rect x="${x+122}" y="${y+26}" width="19" height="18" rx="4" fill="#364e6c" stroke="#a2cafd"/><text x="${x+131.5}" y="${y+39}" text-anchor="middle" fill="#fff" font-size="13">${it.open?'▾':'▸'}</text></g>`);
+  out.push('</g>');
+ }
+ $('graphCount').textContent=`${g.items.length} visible nodes · 1 column = 1 half-move; ruler shows full moves${g.limited?' · display limit reached':''}`;
+ return out.join('');
+}
+function drawGraph(fit){
+ $('graphScene').innerHTML=graphElements();
+ $('graphScene').querySelectorAll('.node-hit').forEach(el=>{
+  let id=+el.dataset.id;
+  el.addEventListener('click',e=>{if(e.target.closest('.branch-toggle,.chain-toggle'))return;e.stopPropagation();select(id)});
+  el.addEventListener('dblclick',e=>{if(e.target.closest('.branch-toggle,.chain-toggle'))return;e.stopPropagation();focusAt(id)});
+ });
+ $('graphScene').querySelectorAll('[data-branch]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();toggleBranch(+el.dataset.branch)}));
+ $('graphScene').querySelectorAll('[data-chain]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();let id=+el.dataset.chain;if(expandedChains.has(id))expandedChains.delete(id);else expandedChains.add(id);drawGraph(true)}));
+ if(fit)requestAnimationFrame(fitGraph);else updateTransform();
+}
+function markSelection(){$('graphScene').querySelectorAll('.node-hit').forEach(el=>el.classList.toggle('selected',+el.dataset.id===selected))}
+function canvasSize(){let b=$('graphCanvas').getBoundingClientRect();return {w:Math.max(300,b.width),h:Math.max(300,b.height)}}
+function fitGraph(){const v=canvasSize(),g=graphData;
+ // Keep nodes readable when the repertoire is much larger than the viewport.
+ transform.k=Math.max(.60,Math.min(1.03,(v.w-40)/Math.min(g.width,750),(v.h-60)/Math.min(g.height,680)));
+ transform.x=24-(g.minPly*NODE_STEP+NODE_X0-74)*transform.k;
+ transform.y=g.height*transform.k<v.h-40?(v.h-g.height*transform.k)/2:45;
+ updateTransform()}
+function updateTransform(){const v=canvasSize();$('graphSvg').setAttribute('viewBox',`0 0 ${v.w} ${v.h}`);$('graphScene').setAttribute('transform',`translate(${transform.x} ${transform.y}) scale(${transform.k})`);drawAxis()}
+function drawAxis(){
+ const container=$('axisTicks'),v=canvasSize(),g=graphData,ticks=[];
+ // Each numbered full move spans a WHITE and a BLACK half-move column.
+ const start=Math.max(1,Math.floor(g.minPly/2)+1),end=Math.min(300,Math.ceil(g.maxPly/2)+1);
+ for(let m=start;m<=end;m++){
+  const centerPly=2*(m-1)+1.5;
+  const screenX=transform.x+(NODE_X0+centerPly*NODE_STEP)*transform.k;
+  if(screenX>=-45&&screenX<=v.w+45)ticks.push(`<span class="axis-mark" style="left:${screenX.toFixed(1)}px;width:${Math.max(42,2*NODE_STEP*transform.k).toFixed(1)}px">${m}</span>`);
+ }
+ container.innerHTML=ticks.join('');
+}
+function zoomCenter(f){let v=canvasSize(),nx=Math.min(3,Math.max(.08,transform.k*f)),ratio=nx/transform.k;transform.x=v.w/2+(transform.x-v.w/2)*ratio;transform.y=v.h/2+(transform.y-v.h/2)*ratio;transform.k=nx;updateTransform()}
+function initPanZoom(){let canvas=$('graphCanvas'),down=null;
+ canvas.addEventListener('pointerdown',e=>{if(e.button!==0||e.target.closest('.node-hit,.detail,.move-axis,button'))return;down={x:e.clientX,y:e.clientY,tx:transform.x,ty:transform.y};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')});
+ canvas.addEventListener('pointermove',e=>{if(!down)return;transform.x=down.tx+(e.clientX-down.x);transform.y=down.ty+(e.clientY-down.y);updateTransform()});
+ function stop(){down=null;canvas.classList.remove('dragging')}canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop);
+ canvas.addEventListener('wheel',e=>{if(e.target.closest('.detail'))return;e.preventDefault();let bounds=canvas.getBoundingClientRect(),px=e.clientX-bounds.left,py=e.clientY-bounds.top;let scale=e.deltaY<0?1.15:.87,nk=Math.min(3,Math.max(.08,transform.k*scale)),ratio=nk/transform.k;transform.x=px+(transform.x-px)*ratio;transform.y=py+(transform.y-py)*ratio;transform.k=nk;updateTransform()},{passive:false});
+ window.addEventListener('resize',()=>fitGraph())
+}
+function downloadBlob(data,name,type){let blob=new Blob([data],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200)}
+function pgnComment(s){return s?'{ '+String(s).replace(/[{}]/g,' ').replace(/[\r\n]+/g,' ')+' } ':''}
+function serializeMove(node){let parent=N[node.parent],parts=parent.fen.split(' '),moveNumber=+parts[5]||1,notation=(parent.turn==='white'?`${moveNumber}.`:`${moveNumber}...`);
+ return notation+' '+pgnComment(node.starting_comment)+node.san+' '+(node.nags||[]).map(n=>'$'+n+' ').join('')+pgnComment(node.comment)
+}
+// Alternatives must occur immediately AFTER the main move, before its continuation.
+function serializeFrom(id){let children=N[id].children.filter(cid=>kept.has(cid));if(!children.length)return '';
+ const first=N[children[0]];let result=serializeMove(first);
+ for(let i=1;i<children.length;i++)result+=`( ${serializeLine(children[i])}) `;
+ return result+serializeFrom(first.id)
+}
+function serializeLine(id){let n=N[id],result=serializeMove(n);return result+serializeFrom(id)}
+function exportPGN(){let pgn=R.filter(root=>kept.has(root)).map(root=>{let i=N[root].chapter;
+ let headers=DATA.headers[i]||{},head=Object.entries(headers).map(([k,v])=>`[${k.replace(/[^A-Za-z0-9_]/g,'')} "${String(v).replace(/\\/g,'\\\\').replace(/"/g,'\\"')}"]`).join('\n');
+ let line=pgnComment(N[root].comment)+serializeFrom(root)+' '+(headers.Result||'*');return head+'\n\n'+line.trim()+'\n'
+ }).join('\n');
+ downloadBlob(pgn,applied.mode==='target'?`target_repertoire_${N.filter(n=>kept.has(n.id)&&!n.children.some(cid=>kept.has(cid))).length}_lines.pgn`:`filtered_repertoire_${Math.round(applied.coverage*100)}pct.pgn`,'application/x-chess-pgn;charset=utf-8')
+}
+async function exportPNG(){let g=graphData,scene=$('graphScene').cloneNode(true);scene.removeAttribute('transform');
+ let w=Math.max(400,g.width),ht=Math.max(300,g.height),scale=Math.min(2,8192/w,8192/ht,Math.sqrt(16000000/(w*ht)));
+ let axis=`<rect width="${w}" height="42" fill="#223244"/>`;
+ for(let m=Math.max(1,Math.floor(g.minPly/2)+1);m<=Math.min(300,Math.ceil(g.maxPly/2)+1);m++){
+  const xx=NODE_X0+(2*(m-1)+1.5)*NODE_STEP;
+  axis+=`<line x1="${xx}" y1="0" x2="${xx}" y2="42" stroke="#647c89" opacity=".6"/><text x="${xx}" y="26" text-anchor="middle" fill="#e1f2f7" font-size="16" font-family="sans-serif" font-weight="bold">${m}</text>`;
+ }
+ let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${ht}" viewBox="0 0 ${w} ${ht}"><rect width="100%" height="100%" fill="#0e1822"/><g>${scene.innerHTML}</g><g>${axis}</g></svg>`;
+ let url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));try{
+  let img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url});let canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(ht*scale));let ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  await new Promise((resolve,reject)=>canvas.toBlob(blob=>{if(!blob){reject(Error('Could not create PNG'));return}let a=document.createElement('a'),link=URL.createObjectURL(blob);a.href=link;a.download=`graph_${viewMode==='chapter'?'chapter_'+(chapter+1):viewMode}_${applied.mode==='target'?'target_'+applied.target:'coverage_'+Math.round(applied.coverage*100)}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(link),1200);resolve()},'image/png'))
+ }catch(err){alert('PNG export failed: '+err.message)}finally{URL.revokeObjectURL(url)}
+}
+uiInit();
+})();
+</script></body></html>

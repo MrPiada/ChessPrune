@@ -1,37 +1,31 @@
-# Python and local environments
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
+# Generated native builds and packaged releases
+/dist/
+/build/
+*.exe
+*.dmg
+*.app/
+*.tar.gz
+/SHA256SUMS.txt
 
-# Local analysis results, user files and caches
-analyses/
-output/
-output_*/
-results/
-results_test/
-.cache/
-*.log
+# Application data, personal PGN repertoires, caches and credentials
+/analyses/
+/results/
+/_smoke_output/
 *.pgn
-**/data.json
-**/dashboard.html
-*.sqlite
-*.db
-
-# Secrets and local configuration
+/data.json
+/dashboard.html
+*.log
 .env
 .env.*
-!.env.example
-*.key
-*.pem
+.cache/
 
-# OS / IDE
+# Editor/OS files
 .DS_Store
-Thumbs.db
 .idea/
 .vscode/
+*.swp
+
+# Historical Python build artifacts (the release is Go-only)
+__pycache__/
+*.pyc
+.venv/

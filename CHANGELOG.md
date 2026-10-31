@@ -1,14 +1,13 @@
 # Changelog
 
-## ChessPrune — 2026-10-30
+## v0.1.0-go — Go backend preview
 
-- Rebranded the application as **ChessPrune** in the analysis UI, graph UI, CLI and documentation.
-- Integrated `assets/ChessPrune_Icon.png` into the analysis UI; embedded the same icon in standalone results dashboards.
-- Added the `assets/ChessPrune_SmarterPreparation.png` project banner to the README.
-- Standardized new job directories and output filenames in English (`analyses/`, `results/`, `data.json`, `filtered_repertoire.pgn`, `target_repertoire_<N>_lines.pgn`).
-- Updated README and credited iterative ChatGPT-assisted coding and ChatGPT-generated visual artwork.
-- Added branding smoke tests; preserved White/Black support, Target Lines, Coverage, traps, manual branch selection and PGN/PNG/CSV exports.
+- Replaced the Python runtime with a native, standard-library-only Go implementation.
+- Embedded both HTML interfaces and the ChessPrune logo into the compiled executable.
+- Implemented standard-chess PGN parsing (RAV variations, comments, NAGs, FEN, legal SAN) and deterministic repertoire selection.
+- Added Lichess Opening Explorer caching, Cloud evaluation and optional Stockfish UCI integration.
+- Added Go analysis server, progress reporting and standalone HTML/PGN outputs.
+- Added Apple Silicon / Intel macOS, Windows x64 and Ubuntu/Linux x64/ARM64 release builds.
+- Added MIT license, multi-platform packaging documentation and executable-free test suite.
 
-### Compatibility
-
-This release changes the names of *newly generated output files*. Old analysis JSON reports can still be read by `rebuild_dashboard.py` without a new analysis. Existing local result directories are not moved automatically.
+**Pre-release note:** live network/engine analysis and cross-platform execution require further validation.

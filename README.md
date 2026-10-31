@@ -1,325 +1,217 @@
+<p align="center">
+  <img src="assets/ChessPrune_SmarterPreparation.png" alt="ChessPrune — Less memorization. Smarter preparation." width="100%">
+</p>
+
 # ChessPrune
 
-![ChessPrune — Less memorization. Smarter preparation.](assets/ChessPrune_SmarterPreparation.png)
+**Less memorization. Smarter preparation.**
 
-<p align="center"><strong>Less memorization. Smarter preparation.</strong></p>
+ChessPrune is a free, open-source, local-first chess opening repertoire optimizer. Import a PGN (including multi-chapter Lichess studies), use [Lichess Opening Explorer](https://explorer.lichess.org/) game frequencies and optional chess-engine evaluations to identify the lines worth learning, explore the annotated opening tree, and export a reduced PGN.
 
-**ChessPrune is a local, browser-based tool for pruning large chess-opening repertoires into a focused set of variations worth studying.**
+**Now implemented in Go:** one native executable per operating system, with the complete HTML/JavaScript frontend embedded at build time. Running the application requires **no Python, pip, Node.js, Go installation, or web hosting**. You do need a modern browser. All chess analysis logic, PGN parsing, data selection, HTTP handling and file export is implemented in Go.
 
-ChessPrune analyzes opening positions using the [Lichess Opening Explorer](https://explorer.lichess.ovh/) database and optional chess-engine evaluations, ranks positions by their practical study value, and lets you explore and edit the resulting move tree before exporting a smaller PGN.
+> **Release maturity:** The Go port was validated with PGN parsing tests, offline end-to-end analysis, server endpoint tests, a line-selection comparison against the original Python version and cross-compilation checks. This is a pre-release: live Lichess/Stockfish analysis and execution of every cross-compiled binary still need independent platform testing. Please report reproducible issues.
 
-It works with repertoires for **White or Black**. The frontend is HTML, CSS and vanilla JavaScript; the backend is Python. There is no hosted service, user account, frontend build step or web-framework dependency.
+## Download and run
 
-> **AI-assisted development and image-generation disclosure**  
-> ChessPrune was created through successive design, coding and review iterations with **ChatGPT by OpenAI**. The project owner defined the requirements, provided feedback and tested iterations; **GPT-6 in ChatGPT assisted with generating and refining source code, UI design, documentation and tests**. The two original graphical assets shipped with this repository — [`ChessPrune_Icon.png`](assets/ChessPrune_Icon.png) and [`ChessPrune_SmarterPreparation.png`](assets/ChessPrune_SmarterPreparation.png) — were also **generated using ChatGPT's image-generation functionality and refined through iterative prompts**. This is a user-led independent project, not an official OpenAI, Lichess, Stockfish or Chessquid product. AI-assisted output may contain errors; please review the source and chess recommendations critically.
+Download the archive or application for your platform from **GitHub → Releases** (assets must first be published by the project maintainer).
 
-## At a glance
+| Platform | Distribution | Launch |
+|---|---|---|
+| macOS Apple Silicon | `ChessPrune-vX-darwin-arm64.zip` or `.dmg` | Open `ChessPrune.app` |
+| macOS Intel | `ChessPrune-vX-darwin-amd64.zip` or `.dmg` | Open `ChessPrune.app` |
+| Windows x64 | `ChessPrune-vX-windows-amd64.zip` | Unzip and double-click `ChessPrune.exe` |
+| Ubuntu/Linux x64 | `ChessPrune-vX-linux-amd64.tar.gz` | Extract, then run `./ChessPrune` |
+| Ubuntu/Linux ARM64 | `ChessPrune-vX-linux-arm64.tar.gz` | Extract, then run `./ChessPrune` |
 
-- **Two repertoire perspectives:** score, trap detection and whose moves are repertoire decisions adjust for White or Black.
-- **One PGN, multiple chapters:** import a standard-chess PGN, including exported studies with variations, comments and numeric annotation glyphs (NAGs).
-- **Evidence from actual games:** choose Lichess rating bands and speeds; retrieve game counts, results and relative frequencies.
-- **Optional objective evaluation:** local Stockfish, Lichess Cloud evaluations, a hybrid approach or no engine.
-- **Two selection strategies:** specify a **Target Lines** memorization budget (for example, 50 terminal variations), or use an opponent-response **Coverage** threshold.
-- **Interactive results:** horizontal SAN move tree, full-move ruler, chapter/all-chapters/traps views, pan/zoom, Fit view, collapsible non-branching sequences, comment markers and position details.
-- **Manual control:** include or exclude complete subtrees; manual decisions take precedence over automatic filtering when exporting.
-- **Export:** filtered PGN, a PNG of the current graph and a sortable study-lines CSV.
-- **Local execution:** the browser controls a Python server bound to `127.0.0.1`; generated dashboards are self-contained HTML files.
+ChessPrune starts a local server at `http://127.0.0.1:8765` (or the next available port), then opens the browser automatically. Leave the application running while interacting with the analysis page. Stop it with `Ctrl+C` when using a terminal. Windows may display a console window while the local server runs.
 
-## Requirements
+**Unsigned app warning:** macOS and Windows may warn about downloaded unsigned applications. These archives are not Apple-notarized or Microsoft Authenticode-signed. Never disable platform security protections globally; verify release checksums and the source before running downloaded software. For public distribution without prominent security warnings, the publisher should sign and notarize the macOS build and code-sign the Windows executable/installer.
 
-- Python **3.10+** (a recent 3.11–3.13 release is recommended).
-- A modern browser (Chrome/Chromium recommended; other evergreen browsers may work).
-- The Python dependencies listed in `requirements.txt`:
-  - `python-chess` — PGN parsing, chess positions and UCI integration.
-  - `requests` — Lichess HTTP requests.
-- **Optional:** Stockfish installed locally if you select *Local*, *Hybrid*, or *Auto* with local-engine availability.
-- Internet access for uncached Lichess Explorer / Cloud queries. With offline mode, the analyzer uses cached data only.
+### What's inside the executable?
 
-### macOS: installation
+- Go HTTP server listening on `127.0.0.1` only
+- A static, embedded HTML analysis frontend (no CDN)
+- Native Go parser for standard-chess PGN, including variations, FEN, comments and NAGs
+- Analysis against the Lichess Opening Explorer API with caching and retry/backoff for HTTP 429
+- Lichess Cloud evaluation integration and a UCI client for an **optional** local Stockfish engine
+- Statistical scoring, practical-trap classification, an importance heuristic and line filtering
+- A complete standalone HTML result dashboard, with graph browsing, annotation and manual inclusion/exclusion, PGN/PNG/CSV export
 
-```bash
-# Run these commands from the unpacked project directory.
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+ChessPrune itself is self-contained. **Stockfish is NOT bundled**: local engine analysis requires a separately installed executable. Select **Auto** (uses Stockfish if present, otherwise Lichess Cloud), **Cloud**, or **None** to run without a local engine. Internet access is still required for uncached Explorer/Cloud requests.
 
-# Optional, but recommended for full engine coverage:
-brew install stockfish
+## Quick start from source
 
-# Start the app:
-.venv/bin/python app.py
-```
-
-The browser normally opens at **http://127.0.0.1:8765**. If that port is occupied, the server tries the next available port and prints its address. Leave the terminal running while using the analysis form. Press **Ctrl+C** to stop the server.
-
-On Linux, install Stockfish with your package manager if needed; set its executable path in the analysis form if it cannot be discovered automatically. The local web server works on supported Python platforms, though primary manual testing has focused on macOS and Chromium.
-
-**Subsequent launches** only require:
+Only the **Go toolchain (1.23+)** is needed to *compile* ChessPrune.
 
 ```bash
-.venv/bin/python app.py
+git clone https://github.com/YOUR_USERNAME/ChessPrune.git
+cd ChessPrune
+go test ./...
+go run .
 ```
 
-No `.sh` launcher, Node.js, npm, Flask or frontend compilation is required.
-
-## Typical workflow
-
-1. **Select a PGN.** The input is a repertoire tree, not necessarily a collection of played games. Its chapters and authored move order matter.
-2. **Choose White or Black.** This determines which moves are *your repertoire choices* and which are the opponent's responses.
-3. **Configure the evidence.** Select Lichess rating bands and time controls. These ratings are Lichess ratings, not FIDE ratings.
-4. **Choose evaluations.** *Auto* prefers local Stockfish when installed and otherwise uses Cloud. *Local* requires Stockfish; *Cloud* may be missing many evaluations; *Hybrid* tries Cloud then local; *None* disables engine-based insights.
-5. **Choose a selection strategy.** A practical starting point is **Target Lines = 50**, minimum **2 per chapter**, **1 repertoire-side option**, with trap priority **1×**. You can change this later in the results dashboard.
-6. **Run a Quick test** to analyze a chapter-balanced sample of complete lines, then choose **Full analysis** for your complete PGN. A backend-driven progress bar tracks the analysis phases; logs appear at the bottom.
-7. **Open the results dashboard.** Browse chapters individually, all chapter trees at once or practical traps. Click a SAN node to view its board, Lichess stats, engine evaluation and original comments. Close the detail panel with **×** or **Esc**.
-8. **Refine your study plan.** Adjust Target Lines / Coverage, use the node-level `+`/`−` controls to include/exclude branches, and apply the filter. Use the sortable *Lines to memorize* table to decide what to learn first.
-9. **Export.** Save the filtered PGN for your chess application; optionally export a graph PNG and study-lines CSV. Export before closing the dashboard if you made manual changes.
-
-The analysis form focuses on new PGN analyses, without a saved-job history or report-import section. Completed results are still written to local disk.
-
-## How the analysis works
-
-```text
-PGN (chapters, variations, comments, NAGs)
-                    |
-          python-chess PGN parser
-                    |
-          position / variation tree
-                    |
-     Lichess Opening Explorer statistics  <-- local persistent cache
-                    |
-       optional Stockfish / Cloud evals  <-- local persistent cache
-                    |
-       importance and trap classification
-                    |
-       Target Lines / Coverage selection
-                    |
-      analysis report + reduced PGN + HTML dashboard
-                    |
-    browser exploration + manual branch overrides
-                    |
-               PGN / PNG / CSV
-```
-
-### 1. Position statistics
-
-Every position is keyed by its chess state (the relevant FEN fields). The program queries Lichess Explorer for the chosen ratings/speeds and stores the returned counts for **White wins, draws and Black wins**. It also tries to use *move-specific* counts from the parent's Explorer response when available.
-
-For the chosen repertoire side:
-
-\[
-\mathrm{score}_{\mathrm{side}} = \frac{\mathrm{wins}_{\mathrm{side}} + 0.5\,\mathrm{draws}}{\mathrm{total\ games}}
-\]
-
-This is the **empirical score**, not the probability of winning the next game. Positions without statistics are labeled as missing rather than assigned invented game counts.
-
-### 2. Engine evaluation
-
-When available, evaluations are stored in **centipawns from White's perspective**: positive scores favor White, negative scores favor Black. Score-based importance and trap detection account for the selected repertoire side. Depth-limited evaluations are estimates, not proof of best play.
-
-The application caches API responses and local engine evaluations. An unchanged analysis may reuse work from earlier runs. Different rating/speed filters or higher Stockfish depth may require new work.
-
-### 3. Importance score
-
-Each node receives an approximate **0–100 study-priority score**, combining:
-
-| Component | Weight | Purpose |
-| --- | ---: | --- |
-| Relative frequency | 55% | Prefer positions commonly reached in the chapter (log-scaled). |
-| Practical results | 25% | Reward strong empirical scores for the chosen color, adjusted toward 50% for small samples. |
-| Objective evaluation | 20% | Prefer positions favorable to the repertoire side according to the engine. |
-
-A practical-trap bonus can add up to 10 points, capped at 100. Missing components contribute neutral values. **Importance is a heuristic priority for study**, not an objective measure of the move's chess quality, a win probability or an Elo estimate.
-
-### 4. Traps: two different concepts
-
-**Tactical errors:** a move by the opponent causes a sufficiently large engine-evaluation swing, and an available repertoire response verifies that it can be exploited. Thresholds are configurable in the Python CLI.
-
-**Practical traps:** a position is approximately balanced according to the engine, yet has an unusually high observed score for the repertoire player over a minimum sample. The implementation applies sample shrinkage and a gap between observed/expected performance. These patterns are statistical, **not proof of a forcing tactic or causal superiority**. Opponent skill, selection effects, small samples and depth limitations matter.
-
-The dashboard distinguishes these categories. Original PGN annotations such as `!`, `?`, `!!`, `??`, `!?`, `?!`, `=`, `+=`, `=+`, `+-` and `-+` are displayed where present; they are **author-supplied annotations**, not new engine judgements.
-
-### 5. Target Lines (memorization budget)
-
-The program enumerates eligible terminal root-to-leaf variations, respects the chosen number of alternatives at repertoire-side turns, and selects up to the requested count using a **deterministic greedy heuristic**.
-
-The heuristic considers relative reach probability *among the opponent continuations represented in the PGN*, position importance, newly covered positions, sample size, trap opportunities and a diminishing preference for chapters already heavily represented. It first tries to give each chapter the configured minimum number of lines, if the budget permits.
-
-The filtered repertoire is the **union of the selected paths**, preserving their PGN move order and comments. Fewer lines may be returned when the original PGN or configured constraints provide fewer eligible candidates.
-
-This procedure is **not an exact global optimization** and does not guarantee that 50 lines cover 50% or any particular percentage of all online games. A chapter-balanced study plan is a practical preference, not a statistical theorem.
-
-### 6. Coverage mode
-
-When it is your turn, the filter follows the authored repertoire choice(s). At an opponent turn it considers the supplied continuations and retains branches by importance until the desired cumulative fraction of Explorer games is reached, subject to minimum-sample and importance criteria. Unknown statistics and certain verified traps receive special handling.
-
-Coverage refers to a local selection rule over the analyzed tree; it should not be interpreted as a guarantee of total real-world opening coverage.
-
-## Understanding the results dashboard
-
-### Move graph
-
-The graph flows **left to right**. Each node is a **SAN half-move** (`e4`, `Nf3`, `O-O`, etc.) accompanied by a light dot for a White move or a dark dot for a Black move. The overlay ruler shows **full move numbers**, not half-move indices. The graph has **no artificial shared “Repertoire” or “Traps” root**: in *All chapters* and *Traps* views, the real chapter roots form a forest.
-
-Use the mouse to pan/zoom, or **Fit view** to restore the overview. Linear sequences without branches can be collapsed and expanded. Annotated positions, comments and detected traps remain available for exploration.
-
-Selecting a node opens a **closable position panel** with a chessboard, statistics, move and pre-move comments, evaluation, importance and continuations. An icon on annotated SAN nodes indicates that a textual move comment is available.
-
-The small `+`/`−` control on a node includes/excludes that branch and its descendants. These manual overrides are applied on top of the automatic filter and affect the PGN exported from the dashboard. They remain in the open browser page; they are **not persisted across reloads**.
-
-### Study lines table
-
-The *Lines to memorize* table contains one row per selected terminal variation. Click any heading to toggle ascending/descending sorting. Its key columns include:
-
-- **Relative weight:** estimated conditional probability within the PGN opponent replies for the chapter. Repertoire-side moves are deliberate decisions rather than random outcomes.
-- **Absolute weight:** an indicative fraction of Lichess games from the chapter's starting position, computed as the product of consecutive observed move/parent-game ratios (each capped at 1). It can become very small in deep lines, and missing counts show `n/a`.
-- **Games / Score / White eval:** sample size, selected-side empirical score and White-perspective engine evaluation.
-
-Absolute weights are **not additive across chapters**, particularly if chapters overlap in their opening moves. Neither weight is a probability that the opponent will reach your chosen line given a different repertoire decision.
-
-### Exports and files
-
-Each analysis creates a timestamped directory under `analyses/`, containing the input PGN, a job metadata file, `console.log`, and a `results/` folder. The generated file and directory names are in English:
-
-**Migration from older releases:** previous directories named `analisi/` or `risultati/` are not renamed or deleted automatically. New runs use `analyses/` and `results/`. To view an older compatible report, you can run `rebuild_dashboard.py` against its JSON file, regardless of the filename, without repeating Lichess or Stockfish queries.
-
-| File | Description |
-| --- | --- |
-| `results/dashboard.html` | Standalone interactive graph/dashboard with embedded analysis data. |
-| `results/data.json` | Machine-readable analysis report (nodes, stats, evals, comments and configuration). |
-| `results/filtered_repertoire.pgn` | Initial PGN filtered during Python analysis. |
-| `results/target_repertoire_<N>_lines.pgn` | Server-generated target-lines PGN, when the target strategy is active. |
-| `console.log` | Human-readable backend execution messages. |
-
-The dashboard can also export a **new PGN reflecting manual overrides**, a **PNG** of the current graph and a **CSV** of the study lines in current sort order. These download into your browser's configured downloads location.
-
-## Architecture and source files
-
-```text
-ChessPrune/
-├── app.py                   # Local HTTP server, job management, progress, file endpoints
-├── web/
-│   └── index.html           # English configuration / processing UI
-├── repertoire_optimizer.py  # PGN parsing, Explorer, engine, traps, reports
-├── line_selector.py         # Deterministic Target Lines selection
-├── pgn_from_report.py       # PGN reconstruction from an existing JSON report
-├── rebuild_dashboard.py     # Offline HTML/target-PGN rebuild utility
-├── dashboard_template.html  # Self-contained interactive graph template
-├── branding.py              # Embed ChessPrune icon in offline dashboards
-├── assets/
-│   ├── ChessPrune_Icon.png
-│   └── ChessPrune_SmarterPreparation.png
-├── requirements.txt
-├── .gitignore
-├── START_HERE.txt
-└── README.md
-```
-
-**Python backend.** `app.py` serves the frontend via Python's built-in HTTP server, receives PGN uploads, validates parameters, starts the analyzer in a subprocess and tracks structured progress events. Jobs are run sequentially to limit CPU/memory usage and API load. HTTP routes are restricted to localhost with origin/host checks.
-
-**HTML frontend.** `web/index.html` configures analyses and displays progress/logs. The generated `dashboard.html` contains its dataset inline, so graph exploration, filtering and exports do **not** call Python, Stockfish or Lichess again.
-
-**Data boundary.** PGN files, reports and cached data remain on the machine by default, but **positions, selected ratings/speeds, and possibly a token** are sent to Lichess when network queries are enabled. A token supplied through the UI is passed to the subprocess as an environment variable, not written intentionally to job metadata; nevertheless, review logs and source before using secrets.
-
-### Advanced use without the web UI
-
-The backend analyzer can also be run directly:
+To create a single executable for your current computer:
 
 ```bash
-.venv/bin/python repertoire_optimizer.py --help
-
-.venv/bin/python repertoire_optimizer.py my_openings.pgn \
-  --out output \
-  --side white \
-  --ratings 1800,2000 \
-  --speeds blitz,rapid \
-  --filter-mode target \
-  --target-lines 50 \
-  --min-chapter-lines 2 \
-  --eval-source auto \
-  --max-evals 0
+CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o ChessPrune .
+./ChessPrune
 ```
 
-If you already have a compatible report JSON, rebuild the dashboard without network or engine calls:
+For Windows, use `ChessPrune.exe` as the output name.
+
+### Run without the browser GUI
 
 ```bash
-.venv/bin/python rebuild_dashboard.py path/to/data.json \
-  --out path/to/dashboard.html \
-  --target-lines 50
+./ChessPrune --analyze my_openings.pgn --side white \
+  --target-lines 50 --eval-source auto --out results
 ```
 
-This rebuild utility remains available to advanced users even though the report-import section is not present in the main web UI.
+Other CLI switches include `--eval-source none`, `--offline`, `--port`, `--no-browser` and `--version`. The browser GUI exposes more configuration controls, including rapid/blitz ratings, Stockfish depth, caches, trap priority, target line count and coverage thresholds.
 
-## Development checks (optional)
+## How it works
 
-The repository includes two small regression-test suites:
+### 1. Load an authored PGN repertoire
+
+ChessPrune preserves move-tree order and original comments while interpreting *standard chess* legal moves, castling, promotions, en passant, FEN starting positions, nested variations and NAG annotations. Unsupported variants such as Chess960 are rejected. The repertoire color controls whose moves represent author choices and whose moves represent potential opponent replies.
+
+### 2. Query Lichess statistics
+
+Game counts come from Lichess Opening Explorer, filtered by rating band and time control. For positions with multiple transpositions, ChessPrune caches Explorer requests by their canonical four-field FEN. Per-move counts are read from the parent's Explorer response when available.
+
+ChessPrune attempts to reuse existing Python-era Explorer cache entries if they are in `~/.cache/repertoire_optimizer/` and have matching query settings. On macOS and Linux this directory is in the user's home folder; using a Go binary does not erase the previous cache. Lichess rate limiting is respected: 429 responses cause a cooldown of **at least 60 seconds**. The tool does not collect account credentials by default; any optional Lichess token is kept only for the running analysis.
+
+### 3. Optionally evaluate with Stockfish
+
+ChessPrune communicates with a separately installed Stockfish engine over the [UCI protocol](https://www.chessprogramming.org/UCI), or requests available evaluations from Lichess Cloud. In **Auto** mode, Stockfish takes precedence when found. Evaluation values in the report are normalized to the **White point of view** (positive values favor White). The selected repertoire side is used when ranking and classifying traps.
+
+Cloud evaluations can be missing for uncommon positions. Local evaluations depend on the chosen depth and engine build. No engine evaluation is proof that a variation is the only correct continuation.
+
+### 4. Estimate position importance
+
+The heuristic uses a mixture of:
+
+- **55% frequency:** game counts logarithmically normalized within each chapter
+- **25% practical score:** empirical game results for your color, shrunk toward 50% for small samples
+- **20% objective evaluation:** engine centipawns transformed to a smooth normalized score
+
+An additional bonus can highlight statistically interesting practical traps. These are approximately balanced positions with unusually strong real-game results for the repertoire side; **a practical trap is an observation, not a forced tactical refutation**.
+
+### 5. Prune the repertoire
+
+**Target Lines** chooses a fixed study budget (for example 50 complete variations). Candidate lines are scored by incremental usefulness, relative frequencies of the opponent's *authored PGN* continuations, importance, chapter balancing and adjustable trap priority. This is a deterministic **greedy heuristic**, not an exact optimal solver. You can set a minimum allocation per chapter.
+
+**Coverage** preserves the author's first N candidate moves for their side and selects opponent responses until the configured per-position statistical coverage is reached. Missing game counts are never silently fabricated. The full repertoire remains accessible in the input file.
+
+You can also manually include/exclude whole subtrees in the result GUI. The final exported PGN follows those manual selections.
+
+### 6. Explore and export
+
+The standalone dashboard offers:
+
+- Horizontal move tree with SAN notation (`e4`, `Nf3`), full-move axis and White/Black move dots
+- Collapsible unbranched chains, all-chapter view, trap view and move comments
+- Click-to-open position details, including chessboard, evaluations and statistics
+- Node importance colors, NAG and qualitative annotations
+- An adjustable Target Lines / Coverage selector and clickable inclusion/exclusion controls
+- Sortable *Lines to memorize* table with relative and absolute estimated weights
+- PGN, CSV and PNG exports
+
+The result HTML file includes the data and ChessPrune logo, so it opens **offline** in a normal browser without the Go server. For revised Lichess/Stockfish statistics, start a fresh analysis from the app.
+
+## Compilation and release distribution (build everything on macOS)
+
+Install the current Go toolchain (for example `brew install go`) and optionally the GitHub CLI (`brew install gh`). From the repository root on your Mac:
 
 ```bash
-python3 -m unittest discover -s tests -v
-node tests/test_forest_graph.js
-```
-
-The Python tests use the standard library. The JavaScript test uses **Node.js only for development checks**; Node is not necessary to run the application. These are smoke/regression tests, not a substitute for a complete live Lichess and Stockfish integration test on your own PGN.
-
-## Troubleshooting
-
-| Symptom | What to check |
-| --- | --- |
-| Browser page does not open | Read the URL printed in the terminal; try it manually. Keep `app.py` running. |
-| `Missing Python dependencies` | Use the same Python environment for installation and launch: `.venv/bin/python -m pip install -r requirements.txt`. |
-| Stockfish not found | Run `which stockfish`, install with `brew install stockfish`, specify an absolute path or select Cloud/None. |
-| Long analyses / HTTP 429 | Lichess rate limits are real; the client backs off. Reuse the persistent cache, run Quick test first and avoid unnecessary reruns. |
-| Cloud eval unavailable | Many positions have no published Cloud evaluation. Select local Stockfish or Hybrid for greater coverage. |
-| Progress bar stays on one phase | A large PGN, engine search or Lichess cooldown may take time. Check **Backend logs** for details; the percentage tracks steps, not elapsed time. |
-| Graph seems empty in Traps view | No positions may meet the selected practical-trap definition, or view filters may exclude them. Switch to All chapters. |
-| Manually excluded branches return | Overrides exist in browser memory only. Export your customized PGN before reloading the page. |
-| Output files are not listed in Git | Deliberate: `.gitignore` excludes analyzed PGNs, reports, logs, cache and virtual environments. |
-
-## Publishing in an existing GitHub clone
-
-The repository is already cloned at `/Users/fversari/WORKDIR/ChessPrune`. **Do not run `git init` or `gh repo create` again**. Unpack this release elsewhere and copy its contents (including dotfiles) **into the existing clone**, without replacing the `.git/` directory.
-
-```bash
-# Example: unpack into Downloads first
-cd ~/Downloads
-unzip ChessPrune_release.zip
-
-# Copy source files and images, preserving the existing Git history.
-rsync -av --exclude='.git' --exclude='.venv' --exclude='analyses' \
-  ~/Downloads/ChessPrune_release/ \
-  /Users/fversari/WORKDIR/ChessPrune/
-
 cd /Users/fversari/WORKDIR/ChessPrune
-# Review before committing (especially important when updating an existing clone):
-git remote -v
-git status --short
-git diff --check
-git diff --stat
+go version
+go test ./...
+./scripts/build-release.sh v0.1.0-go
+ls -lh dist/
+```
 
-# Stage source, docs and images (ignored PGNs and results stay untracked):
+This script uses `GOOS`, `GOARCH`, and `CGO_ENABLED=0` and creates:
+
+| Target | Generated release asset |
+|---|---|
+| macOS arm64 | ZIP of `.app`, and DMG when run on macOS |
+| macOS amd64 | ZIP of `.app`, and DMG when run on macOS |
+| Windows amd64 | ZIP containing `ChessPrune.exe`; optional NSIS `Setup.exe` |
+| Linux amd64 | `.tar.gz` containing `ChessPrune` |
+| Linux arm64 | `.tar.gz` containing `ChessPrune` |
+| All targets | `SHA256SUMS.txt` |
+
+Go's pure-Go cross compilation works on macOS without installing a Windows or Linux compiler. A macOS **DMG is generated by `hdiutil` and therefore requires macOS**, but no cross-target VM. **Build success is not runtime validation**: test the Windows executable on Windows and the Linux executable on Ubuntu, ideally in CI or VMs before marking a release stable.
+
+On macOS, `brew install makensis` enables an **optional NSIS Windows `Setup.exe` installer** in addition to the portable ZIP; it does not require Windows to compile. This installer has not been tested on Windows in this environment. The native macOS `.app` packages and Windows installers/ZIPs are not code-signed/notarized. On macOS, an authenticated Developer ID certificate, Hardened Runtime, `notarytool`, and `stapler` are needed for a normal public notarized release. On Windows, SmartScreen reputation and code signing matter for a professional installer. On Linux, no AppImage is generated by default.
+
+### Publish a release on GitHub
+
+First commit the new Go project to your existing clone, then create an annotated tag and push it:
+
+```bash
+git status
 git add -A
 git diff --cached --check
-git diff --cached --stat
+git commit -m "Port ChessPrune backend to Go and embed the frontend"
+git push origin main
 
-git commit -m "Rebrand as ChessPrune and add English UI and artwork"
-git push -u origin "$(git branch --show-current)"
+git tag -a v0.1.0-go -m "ChessPrune native Go pre-release"
+git push origin v0.1.0-go
 ```
 
-If the clone has source files removed or moved in the new release, inspect those changes in `git status` before the commit. If other contributors may have pushed newer commits, fetch/pull before overwriting local files. The included `.gitignore` excludes PGNs, user analyses, caches, logs and credentials, but **does not retroactively untrack previously committed files**.
+Then, if you have GitHub CLI installed:
 
-**License:** A `LICENSE` file is intentionally not imposed by this release. If your GitHub repository already has a license, keep it. MIT is a straightforward permissive choice for a new repository; add the copyright holder and year only with the owner's approval.
+```bash
+brew install gh  # only if not already installed
+gh auth login    # only once
+gh release create v0.1.0-go dist/ChessPrune-v0.1.0-go-* dist/SHA256SUMS.txt \
+  --title "ChessPrune v0.1.0-go (preview)" --prerelease \
+  --notes "Native Go backend, embedded web interface, and macOS / Windows / Linux builds. Stockfish optional."
+```
+
+Alternatively, on GitHub open **Releases → Draft a new release**, select tag `v0.1.0-go`, and drag in all the files from `dist/`. Select **Pre-release** until the binaries have been tested on each operating system.
+
+For a later release, bump the tag (`v0.1.1-go`, etc.) and repeat the script; do not overwrite already published immutable release tags.
+
+### Updating your existing local clone safely
+
+Don't run `git init` again, and don't `rsync --delete` into the repository (it might delete `.git`). Verify a clean working tree first, then copy the new sources using `rsync -av` while excluding `.git`, `dist`, `analyses`, and local cache folders. Review the staged changes carefully before committing. Remove obsolete tracked `.py` files only after confirming that the Go sources replace them.
+
+## Local data and security
+
+Only local loopback (`127.0.0.1`) is bound by the server. The backend enforces local Host/Origin checks and prevents arbitrary file downloads. Uploaded PGN input, analysis results and backend logs are stored under the OS-specific **user configuration directory** (`ChessPrune/analyses`). The result HTML is self-contained; you may copy it elsewhere. Personal opening repertoires, cached Lichess statistics and output reports are excluded by `.gitignore`.
+
+The server has no login and is intended for your own desktop, not a public network. It is **not** a hosted web service. PGNs and comments are user-controlled data; review any files you share.
+
+## Development / testing
+
+```bash
+go test -v ./...
+go vet ./...
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o /tmp/ChessPrune-macos .
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o /tmp/ChessPrune.exe .
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /tmp/ChessPrune-linux .
+```
+
+The tests cover standard PGN parsing, comments/NAG retention, deterministic target selection, offline report generation and the HTTP server's analysis flow. They do not require network access or Stockfish.
 
 ## Limitations and acknowledgments
 
-- The input is a **standard-chess PGN**. Unsupported variants, invalid PGNs, unusual custom-start positions and complex annotation encodings may need additional testing.
-- The tool evaluates **PGN positions**, not every possible move in the chess opening universe. Repertoire choices normally follow the author's first listed move; selecting additional options expands candidate lines.
-- Lichess frequency and performance depend on the selected population and are not necessarily predictive for a particular player.
-- Engine depth, incomplete Cloud coverage and transpositions limit interpretation of evaluations and trap classifications.
-- **Target Lines** uses a greedy ranking heuristic; it does not solve an exact optimal coverage problem.
-- The local server is for a **single trusted user on their own computer**, not for internet-facing deployment or multi-user hosting.
-- This project uses public Lichess services subject to their own availability, API usage guidance and rate limits. It uses the independently installed Stockfish engine through UCI; Stockfish is not bundled.
-- The interface and graphics were developed iteratively with ChatGPT. Similarities to other chess-tree visualization tools reflect familiar interaction patterns, not affiliation or use of their proprietary code.
+- The repertoire must be a **standard-chess PGN**. Chess960 and other variants are currently unsupported.
+- Only moves present in the PGN can be considered. ChessPrune does not generate an optimal opening repertoire from scratch.
+- Lichess player-pool statistics are not personalized winning probabilities. Rare lines suffer sampling noise.
+- The practical-trap classifier identifies statistical disparities, not necessarily tactical traps.
+- Newer Stockfish releases, Cloud positions, and varying hardware may produce different evaluation depth/results.
+- Complete multi-platform tests and live API/engine tests are recommended before public "stable" releases.
 
-**Acknowledgments:** ChatGPT by OpenAI (AI-assisted code and generated imagery), [Lichess](https://lichess.org/) and its Opening Explorer, [Stockfish](https://stockfishchess.org/), [python-chess](https://python-chess.readthedocs.io/), and the authors/maintainers of the open-source libraries used by this project.
+ChessPrune uses the public [Lichess Opening Explorer](https://explorer.lichess.org/) and optional [Stockfish](https://github.com/official-stockfish/Stockfish). It is **not affiliated with or endorsed by Lichess, Stockfish, GitHub or OpenAI**.
 
-### Brand artwork and reuse
+### Development and AI attribution
 
-The two PNG files in `assets/` are part of the ChessPrune branding. The configuration interface serves `ChessPrune_Icon.png` from the loopback HTTP server; each generated standalone HTML dashboard embeds that same image as a data URI, so it also works offline. The repository banner at the top of this README uses `ChessPrune_SmarterPreparation.png`. If you redistribute or modify the assets, check that your intended license and attribution cover the images as well as the source code.
+**This project was created through extensive iterative collaboration with ChatGPT, including model GPT-6.** The product concept, requirements, feature priorities and iterative feedback were provided by the project maintainer. ChatGPT assisted with **generating and refining the Python prototype, Go code, HTML/JavaScript frontend, tests, build scripts and documentation**. The ChessPrune branding artwork, including `ChessPrune_Icon.png` and `ChessPrune_SmarterPreparation.png`, was **generated using ChatGPT's image-generation capability** and refined through user feedback. AI-assisted code should be reviewed and tested like any other code; the maintainers remain responsible for published releases and documentation.
+
+## License
+
+ChessPrune is released under the **MIT License**. See [`LICENSE`](LICENSE). Stockfish is an independently licensed **GPLv3** program and is not included in the ChessPrune executable. If you decide to redistribute Stockfish binaries in separate or combined packages, follow the Stockfish GPLv3 redistribution requirements, including the corresponding source and license.

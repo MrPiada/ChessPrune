@@ -50,7 +50,14 @@ func cacheDirectory() string {
 func newClient(cfg Config, token string, lg *log.Logger) *Client {
 	p := cacheDirectory()
 	_ = os.MkdirAll(p, 0750)
-	return &Client{Cache: p, Token: token, Delay: time.Duration(cfg.Delay * float64(time.Second)), Offline: cfg.Offline, HTTP: &http.Client{Timeout: 55 * time.Second}, Logger: lg}
+	return &Client{Cache: p, Token: token, Delay: time.Duration(cfg.Delay * float64(time.Second)), Offline: cfg.Offline, HTTP: &http.Client{Timeout: 55 * time.Second, CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		for _, prev := range via {
+			if prev.Header.Get("Authorization") != "" && (req.URL.Scheme != "https" || req.URL.Hostname() != "lichess.org") {
+				return fmt.Errorf("refusing to redirect authenticated Lichess request to another host")
+			}
+		}
+		return nil
+	}}, Logger: lg}
 }
 
 // Match the Python application's sorted, spaced JSON cache keys.
@@ -121,7 +128,8 @@ func (c *Client) Fetch(ctx context.Context, service, endpoint string, params map
 		}
 		req.Header.Set("User-Agent", "ChessPrune-Go/0.1")
 		req.Header.Set("Accept", "application/json")
-		if c.Token != "" {
+		// Never attach user secrets to the Opening Explorer host or HTTP.
+		if c.Token != "" && req.URL.Scheme == "https" && req.URL.Hostname() == "lichess.org" && (service == "cloud" || service == "lichess") {
 			req.Header.Set("Authorization", "Bearer "+c.Token)
 		}
 		res, err := c.HTTP.Do(req)

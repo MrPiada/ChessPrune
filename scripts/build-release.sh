@@ -3,9 +3,12 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-VERSION="${1:-v0.1.0-go}"
+VERSION="${1:-v1.1.0-go}"
 DIST="${DIST_DIR:-$ROOT/dist}"
 mkdir -p "$DIST"
+# Generate the native Windows resource from PNGs (Python stdlib only).
+# The Go linker embeds rsrc_windows_amd64.syso into the .exe automatically.
+python3 scripts/build_windows_icon.py
 # Using a fresh staging area avoids accidentally packaging private PGNs or reports.
 STAGING="$(mktemp -d)"
 trap 'rm -rf "$STAGING"' EXIT
@@ -18,8 +21,11 @@ for target in darwin/arm64 darwin/amd64 windows/amd64 linux/amd64 linux/arm64; d
   EXE="ChessPrune"
   if [[ "$OS" == windows ]]; then EXE="ChessPrune.exe"; fi
   echo "==> Building $target"
+  LDFLAGS="-s -w -X main.version=${VERSION}"
+  # Double-clicking Windows .exe opens the browser without an extra console.
+  if [[ "$OS" == windows ]]; then LDFLAGS="$LDFLAGS -H windowsgui"; fi
   CGO_ENABLED=0 GOOS="$OS" GOARCH="$ARCH" go build -trimpath \
-    -ldflags="-s -w -X main.version=${VERSION}" -o "$DIR/$EXE" .
+    -ldflags="$LDFLAGS" -o "$DIR/$EXE" .
   cp LICENSE "$DIR/LICENSE"
   cp packaging/PORTABLE_README.txt "$DIR/README.txt"
   if [[ "$OS" == darwin ]]; then
@@ -31,6 +37,9 @@ for target in darwin/arm64 darwin/amd64 windows/amd64 linux/amd64 linux/arm64; d
     sed "s/__VERSION__/$APP_VERSION/g" packaging/Info.plist > "$APP/Contents/Info.plist"
     mkdir -p "$APP/Contents/Resources"
     cp LICENSE "$APP/Contents/Resources/LICENSE"
+    # Prebuilt ICNS is included, so cross-compiled macOS archives have the logo too.
+    # macOS builders may regenerate it at full quality using iconutil/sips below.
+    cp packaging/ChessPrune.icns "$APP/Contents/Resources/ChessPrune.icns"
     # Create a native Finder icon when running this script on macOS.
     if [[ "$(uname -s)" == Darwin ]] && command -v iconutil >/dev/null 2>&1 && command -v sips >/dev/null 2>&1; then
       ICONSET="$STAGING/ChessPrune.iconset"
@@ -61,9 +70,14 @@ for target in darwin/arm64 darwin/amd64 windows/amd64 linux/amd64 linux/arm64; d
     # Optional native Windows Setup.exe created on the Mac via NSIS.
     if command -v makensis >/dev/null 2>&1; then
       makensis -V2 -DINPUT_EXE="$DIR/$EXE" -DOUTFILE="$DIST/${NAME}-Setup.exe" \
-        -DLICENSE_PATH="$ROOT/LICENSE" packaging/WindowsInstaller.nsi
+        -DLICENSE_PATH="$ROOT/LICENSE" -DICON_PATH="$ROOT/packaging/ChessPrune.ico" packaging/WindowsInstaller.nsi
     fi
   else
+    mkdir -p "$DIR/share/icons/hicolor/256x256/apps"
+    cp packaging/windows_icon/icon_256.png "$DIR/share/icons/hicolor/256x256/apps/chessprune.png"
+    cp packaging/ChessPrune.desktop "$DIR/ChessPrune.desktop"
+    cp packaging/install-linux.sh "$DIR/install-linux.sh"
+    chmod +x "$DIR/install-linux.sh"
     (cd "$STAGING" && tar czf "$DIST/${NAME}.tar.gz" "$NAME")
   fi
 done

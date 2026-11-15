@@ -24,7 +24,7 @@ h1{font-size:29px;line-height:1.15;margin:3px 0}h2{font-size:17px;margin:0 0 12p
 .axis-ticks{position:absolute;inset:0;pointer-events:none}.axis-mark{position:absolute;top:0;min-width:40px;height:40px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;font-size:12px;color:#d7e8f2;font-weight:750;font-variant-numeric:tabular-nums;border-left:1px solid #57708465;border-right:1px solid #57708465}
 .axis-title{position:absolute;z-index:2;top:9px;left:10px;border-radius:5px;padding:3px 8px;background:#162433ee;color:#8fe7c7;font:800 10px system-ui,sans-serif;letter-spacing:.9px}
 .detail{position:absolute;z-index:6;top:55px;right:12px;width:min(365px,calc(100% - 20px));max-height:calc(100% - 70px);overflow:auto;padding:15px;border:1px solid #7daab2;box-shadow:0 15px 50px #05090ddd;background:#172636f9;border-radius:13px;cursor:default;touch-action:auto}
-.detail[hidden]{display:none!important}.detailinner{display:block}.detail .chessboard{max-width:234px;margin:8px auto 10px}.detail .sq{font-size:29px}
+.detail[hidden]{display:none!important}.detailinner{display:block}.detail .chessboard{max-width:234px;margin:8px auto 10px}.chessboard{display:block;min-width:0}.detail .chessboard svg{display:block;width:100%;height:auto;aspect-ratio:1;overflow:hidden}
 .detail h3{margin:11px 0 5px}.detail .evalbox{padding:4px 0}.detail .comment{max-height:130px}
 .close-detail{position:sticky;top:0;float:right;z-index:7;width:29px;height:29px;border:1px solid #61798d;border-radius:7px;background:#284254;color:#f4fafc;font-size:23px;line-height:23px;cursor:pointer}
 .close-detail:hover{background:#47718b}.detail:focus-within{outline-color:#9fe9db}
@@ -35,12 +35,67 @@ h1{font-size:29px;line-height:1.15;margin:3px 0}h2{font-size:17px;margin:0 0 12p
 .fit-floating{position:absolute;z-index:5;left:12px;top:50px;background:#285545ed;border:1px solid #80d9b5;box-shadow:0 5px 18px #020508bb;font-size:12px}.fit-floating:hover{background:#35745e}
 .th-sort{cursor:pointer;white-space:nowrap;user-select:none}.th-sort:hover{background:#36506b;color:#eafffb}.th-sort:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}.th-sort .sort-arrow{color:#8fe7c7;padding-left:4px}.node-comment{pointer-events:none}
 .graph-brand{display:flex;align-items:center;gap:14px}.graph-brand img{width:62px;height:62px;object-fit:cover;border-radius:14px;border:1px solid #32634e;flex:none}@media(max-width:660px){.graph-brand img{width:48px;height:48px}}
+
+/* Embedded result mode is the second tab of the ChessPrune application.
+   Standalone downloaded dashboards retain the original full-page layout. */
+body.embedded{height:100dvh;overflow:hidden;font-size:12px}
+body.embedded .wrap{height:100dvh;width:100%;max-width:none;min-height:0;display:flex;flex-direction:column;gap:7px;padding:9px 13px 11px;overflow:hidden}
+body.embedded .header,body.embedded .foot,body.embedded #targetExplanation{display:none}
+body.embedded #warning{margin:0;padding:5px 8px;font-size:10px}
+body.embedded .kpis{flex:0 0 auto;gap:7px;margin:0}
+body.embedded .kpi{padding:7px 10px}
+body.embedded .kpi strong{font-size:17px}
+body.embedded .kpi span{font-size:10px}
+body.embedded .embedded-nav{display:flex;flex:0 0 34px;align-items:stretch;gap:5px;border-bottom:1px solid var(--line)}
+body.embedded .embedded-nav button{border:1px solid #354b5b;border-radius:8px 8px 0 0;border-bottom:0;background:#1d3040;color:#aac2cc;font-size:11px;font-weight:700;padding:5px 20px;cursor:pointer}
+body.embedded .embedded-nav button.active{border-color:#78d4ae;color:#beffe7;background:#214637;box-shadow:inset 0 2px 0 #8fe7c7}
+body.embedded .embedded-nav .embedded-tip{font-size:10px;color:#8199ab;margin:auto 2px auto auto}
+body.embedded #filters{flex:0 0 auto;padding:8px 10px;margin:0;max-height:185px;overflow:hidden}
+body.embedded #filters .toolbar{display:flex;flex-wrap:wrap;gap:7px 10px;align-items:end}
+body.embedded #filters .field{min-width:95px;gap:1px}
+body.embedded #filters .field input[type=range]{width:128px;margin:1px 0}
+body.embedded #filters .field input[type=number]{width:65px}
+body.embedded #filters .field .small{display:none}
+body.embedded #filters .input{min-height:28px;padding:3px 5px;font-size:11px}
+body.embedded #filters .btn{padding:5px 7px;font-size:11px}
+body.embedded #filters .controls{gap:4px}
+body.embedded #filters .target-control{min-width:110px}
+body.embedded #filterState{margin-top:3px!important;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.embedded .graph-layout{min-height:0;flex:1;margin:0;display:flex;flex-direction:column}
+body.embedded .graph-panel{flex:1;min-height:0;display:flex;flex-direction:column}
+body.embedded .graph-top{flex:0 0 auto;padding:6px 11px;gap:6px}
+body.embedded .graph-top strong{font-size:13px}
+body.embedded #graphSubtitle{font-size:10px}
+body.embedded .graph-canvas{height:auto!important;flex:1;min-height:0}
+body.embedded .graph-footer{padding:5px 9px;gap:6px;font-size:10px;flex:0 0 auto}
+body.embedded .graph-legend{gap:8px}
+body.embedded .trap-panel,body.embedded #selectedLinesPanel,body.embedded .lower{margin:0;flex:1;min-height:0;overflow:hidden}
+body.embedded .trap-panel,body.embedded #selectedLinesPanel{display:flex;flex-direction:column;padding:10px}
+body.embedded .trap-panel .tablewrap,body.embedded #selectedLinesPanel .tablewrap{flex:1;min-height:0;max-height:none;overflow:auto}
+body.embedded .lower{display:grid;grid-template-columns:minmax(240px,0.4fr) minmax(0,1fr);gap:9px}
+body.embedded .lower .panel{display:flex;flex-direction:column;min-height:0;padding:10px}
+body.embedded .lower .tablewrap{flex:1;min-height:0;max-height:none;overflow:auto}
+body.embedded h2{font-size:14px;margin:0 0 6px}
+body.embedded .tablewrap th,body.embedded .tablewrap td{padding:7px 9px;font-size:11px}
+body.embedded.view-tree .trap-panel,body.embedded.view-tree #selectedLinesPanel,body.embedded.view-tree .lower{display:none}
+body.embedded.view-lines #filters,body.embedded.view-lines .graph-layout,body.embedded.view-lines .trap-panel,body.embedded.view-lines .lower{display:none}
+body.embedded.view-traps #filters,body.embedded.view-traps .graph-layout,body.embedded.view-traps #selectedLinesPanel,body.embedded.view-traps .lower{display:none}
+body.embedded.view-data #filters,body.embedded.view-data .graph-layout,body.embedded.view-data .trap-panel,body.embedded.view-data #selectedLinesPanel{display:none}
+body.embedded .detail{max-height:calc(100% - 65px)}
+@media(max-width:850px){body.embedded .embedded-nav button{padding:5px 10px}body.embedded .embedded-tip{display:none}}
 </style>
 </head>
 <body><main class="wrap">
 <div class="header"><div class="graph-brand"><img src="__CHESSPRUNE_ICON__" width="62" height="62" alt="ChessPrune logo"><div><div class="eyebrow">Lichess Explorer + Stockfish · both colors</div><h1>ChessPrune <span style="color:var(--accent);font-size:14px;vertical-align:middle">· Opening Tree</span></h1><div class="sub">SAN move tree, composite importance, practical traps and exportable repertoire.</div></div></div><div class="chip" id="configChip"></div></div>
 <div class="panel warning" id="warning" hidden></div>
 <section class="kpis" id="metrics"></section>
+<nav class="embedded-nav" id="embeddedNav" aria-label="Opening Tree views" hidden>
+ <button type="button" class="active" data-view="tree">Opening tree</button>
+ <button type="button" data-view="lines">Lines to memorize</button>
+ <button type="button" data-view="traps">Practical traps</button>
+ <button type="button" data-view="data">Statistics & positions</button>
+ <span class="embedded-tip">Select a move for the chessboard · Wheel to zoom</span>
+</nav>
 <section class="panel" id="filters">
 <div class="toolbar">
  <div class="field"><label for="filterMode">Selection strategy</label><select class="input" id="filterMode"><option value="target">Target Lines · number of lines</option><option value="coverage">Coverage · opponent frequency</option></select></div>
@@ -100,7 +155,8 @@ const plyOf=n=>{
 };
 const NODE_STEP=166, NODE_X0=132;
 
-const pieces={K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
+
+const pieceImages={K:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiNmNWYxZTQiIHN0cm9rZT0iIzI5MzkyZSIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTQ3IDdINTNWMThINjJWMjRINTNWMzVINDdWMjRIMzhWMThINDdaIi8+PHBhdGggZD0iTTM1IDM5UTUwIDMxIDY1IDM5TDY5IDU1TDYyIDY5SDM4TDMxIDU1WiIvPjxwYXRoIGQ9Ik0zMyA3MEg2N1Y3OEgzM1oiLz48cGF0aCBkPSJNMjIgODFINzhWOTBIMjJaIi8+PHBhdGggZD0iTTM2IDUwSDY0IiBjbGFzcz0iZW5ncmF2ZSIvPjwvZz48c3R5bGU+LmRldGFpbHtmaWxsOiMyNTM2MmE7c3Ryb2tlOm5vbmV9LmVuZ3JhdmV7c3Ryb2tlOiMyNTM2MmE7c3Ryb2tlLXdpZHRoOjM7ZmlsbDpub25lfTwvc3R5bGU+PC9zdmc+',Q:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiNmNWYxZTQiIHN0cm9rZT0iIzI5MzkyZSIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTgiIGN5PSIyMyIgcj0iNSIvPjxjaXJjbGUgY3g9IjM0IiBjeT0iMTUiIHI9IjUiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjEwIiByPSI1Ii8+PGNpcmNsZSBjeD0iNjYiIGN5PSIxNSIgcj0iNSIvPjxjaXJjbGUgY3g9IjgyIiBjeT0iMjMiIHI9IjUiLz48cGF0aCBkPSJNMTcgMzBMMjkgNjVMNzEgNjVMODMgMzBMNjMgNDhMNTAgMjZMMzcgNDhaIi8+PHBhdGggZD0iTTI4IDY4SDcyVjc3SDI4WiIvPjxwYXRoIGQ9Ik0yMiA4MEg3OFY5MEgyMloiLz48cGF0aCBkPSJNMzYgNjBINjQiIGNsYXNzPSJlbmdyYXZlIi8+PC9nPjxzdHlsZT4uZGV0YWlse2ZpbGw6IzI1MzYyYTtzdHJva2U6bm9uZX0uZW5ncmF2ZXtzdHJva2U6IzI1MzYyYTtzdHJva2Utd2lkdGg6MztmaWxsOm5vbmV9PC9zdHlsZT48L3N2Zz4=',R:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiNmNWYxZTQiIHN0cm9rZT0iIzI5MzkyZSIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTI0IDE4SDM1VjI3SDQzVjE4SDU3VjI3SDY1VjE4SDc2VjM2SDI0WiIvPjxwYXRoIGQ9Ik0yOSAzOEg3MUw2NSA3M0gzNVoiLz48cGF0aCBkPSJNMjUgNzVINzVWODJIMjVaIi8+PHBhdGggZD0iTTIwIDg0SDgwVjkwSDIwWiIvPjxwYXRoIGQ9Ik0zNSA0Mkg2NVY0N0gzNVoiIGNsYXNzPSJkZXRhaWwiLz48L2c+PHN0eWxlPi5kZXRhaWx7ZmlsbDojMjUzNjJhO3N0cm9rZTpub25lfS5lbmdyYXZle3N0cm9rZTojMjUzNjJhO3N0cm9rZS13aWR0aDozO2ZpbGw6bm9uZX08L3N0eWxlPjwvc3ZnPg==',B:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiNmNWYxZTQiIHN0cm9rZT0iIzI5MzkyZSIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIxMyIgcj0iNiIvPjxwYXRoIGQ9Ik01MCAyNEMzOCAzMiAzMSA0MyAzNCA1NUMzNSA2MSAzOSA2MyAzOSA2OEg2MUM2MSA2MyA2NSA2MSA2NiA1NUM2OSA0MyA2MiAzMiA1MCAyNFoiLz48cGF0aCBkPSJNNDAgNjhINjBMNjcgNzlIMzNaIi8+PHBhdGggZD0iTTI1IDgySDc1VjkwSDI1WiIvPjxwYXRoIGQ9Ik01NSAzMEw0MiA1NyIgY2xhc3M9ImVuZ3JhdmUiLz48L2c+PHN0eWxlPi5kZXRhaWx7ZmlsbDojMjUzNjJhO3N0cm9rZTpub25lfS5lbmdyYXZle3N0cm9rZTojMjUzNjJhO3N0cm9rZS13aWR0aDozO2ZpbGw6bm9uZX08L3N0eWxlPjwvc3ZnPg==',N:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiNmNWYxZTQiIHN0cm9rZT0iIzI5MzkyZSIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTI2IDgzTDM1IDY4TDM3IDQ4TDI3IDUwTDE1IDQ2TDE0IDM3TDI3IDI2TDMyIDE3TDQxIDE1TDQ3IDI1TDU5IDI4TDY5IDM4TDcyIDUxTDY0IDY0TDYzIDc3TDczIDgzWiIvPjxwYXRoIGQ9Ik0yNCA4NEg3OFY5MUgyNFoiLz48Y2lyY2xlIGN4PSIzNyIgY3k9IjMwIiByPSIzLjIiIGNsYXNzPSJkZXRhaWwiLz48cGF0aCBkPSJNMTkgNDNMMjkgNDEiIGNsYXNzPSJlbmdyYXZlIi8+PC9nPjxzdHlsZT4uZGV0YWlse2ZpbGw6IzI1MzYyYTtzdHJva2U6bm9uZX0uZW5ncmF2ZXtzdHJva2U6IzI1MzYyYTtzdHJva2Utd2lkdGg6MztmaWxsOm5vbmV9PC9zdHlsZT48L3N2Zz4=',P:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiNmNWYxZTQiIHN0cm9rZT0iIzI5MzkyZSIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIyNSIgcj0iMTIiLz48cGF0aCBkPSJNNDMgNDBINTdMNjUgNjhIMzVaIi8+PHBhdGggZD0iTTMxIDY5SDY5Vjc3SDMxWiIvPjxwYXRoIGQ9Ik0yNCA4MEg3NlY4OEgyNFoiLz48L2c+PHN0eWxlPi5kZXRhaWx7ZmlsbDojMjUzNjJhO3N0cm9rZTpub25lfS5lbmdyYXZle3N0cm9rZTojMjUzNjJhO3N0cm9rZS13aWR0aDozO2ZpbGw6bm9uZX08L3N0eWxlPjwvc3ZnPg==',k:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiMxYTI5MjciIHN0cm9rZT0iI2QyZDVjNyIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTQ3IDdINTNWMThINjJWMjRINTNWMzVINDdWMjRIMzhWMThINDdaIi8+PHBhdGggZD0iTTM1IDM5UTUwIDMxIDY1IDM5TDY5IDU1TDYyIDY5SDM4TDMxIDU1WiIvPjxwYXRoIGQ9Ik0zMyA3MEg2N1Y3OEgzM1oiLz48cGF0aCBkPSJNMjIgODFINzhWOTBIMjJaIi8+PHBhdGggZD0iTTM2IDUwSDY0IiBjbGFzcz0iZW5ncmF2ZSIvPjwvZz48c3R5bGU+LmRldGFpbHtmaWxsOiNlMWQ4YjY7c3Ryb2tlOm5vbmV9LmVuZ3JhdmV7c3Ryb2tlOiNlMWQ4YjY7c3Ryb2tlLXdpZHRoOjM7ZmlsbDpub25lfTwvc3R5bGU+PC9zdmc+',q:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiMxYTI5MjciIHN0cm9rZT0iI2QyZDVjNyIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTgiIGN5PSIyMyIgcj0iNSIvPjxjaXJjbGUgY3g9IjM0IiBjeT0iMTUiIHI9IjUiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjEwIiByPSI1Ii8+PGNpcmNsZSBjeD0iNjYiIGN5PSIxNSIgcj0iNSIvPjxjaXJjbGUgY3g9IjgyIiBjeT0iMjMiIHI9IjUiLz48cGF0aCBkPSJNMTcgMzBMMjkgNjVMNzEgNjVMODMgMzBMNjMgNDhMNTAgMjZMMzcgNDhaIi8+PHBhdGggZD0iTTI4IDY4SDcyVjc3SDI4WiIvPjxwYXRoIGQ9Ik0yMiA4MEg3OFY5MEgyMloiLz48cGF0aCBkPSJNMzYgNjBINjQiIGNsYXNzPSJlbmdyYXZlIi8+PC9nPjxzdHlsZT4uZGV0YWlse2ZpbGw6I2UxZDhiNjtzdHJva2U6bm9uZX0uZW5ncmF2ZXtzdHJva2U6I2UxZDhiNjtzdHJva2Utd2lkdGg6MztmaWxsOm5vbmV9PC9zdHlsZT48L3N2Zz4=',r:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiMxYTI5MjciIHN0cm9rZT0iI2QyZDVjNyIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTI0IDE4SDM1VjI3SDQzVjE4SDU3VjI3SDY1VjE4SDc2VjM2SDI0WiIvPjxwYXRoIGQ9Ik0yOSAzOEg3MUw2NSA3M0gzNVoiLz48cGF0aCBkPSJNMjUgNzVINzVWODJIMjVaIi8+PHBhdGggZD0iTTIwIDg0SDgwVjkwSDIwWiIvPjxwYXRoIGQ9Ik0zNSA0Mkg2NVY0N0gzNVoiIGNsYXNzPSJkZXRhaWwiLz48L2c+PHN0eWxlPi5kZXRhaWx7ZmlsbDojZTFkOGI2O3N0cm9rZTpub25lfS5lbmdyYXZle3N0cm9rZTojZTFkOGI2O3N0cm9rZS13aWR0aDozO2ZpbGw6bm9uZX08L3N0eWxlPjwvc3ZnPg==',b:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiMxYTI5MjciIHN0cm9rZT0iI2QyZDVjNyIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIxMyIgcj0iNiIvPjxwYXRoIGQ9Ik01MCAyNEMzOCAzMiAzMSA0MyAzNCA1NUMzNSA2MSAzOSA2MyAzOSA2OEg2MUM2MSA2MyA2NSA2MSA2NiA1NUM2OSA0MyA2MiAzMiA1MCAyNFoiLz48cGF0aCBkPSJNNDAgNjhINjBMNjcgNzlIMzNaIi8+PHBhdGggZD0iTTI1IDgySDc1VjkwSDI1WiIvPjxwYXRoIGQ9Ik01NSAzMEw0MiA1NyIgY2xhc3M9ImVuZ3JhdmUiLz48L2c+PHN0eWxlPi5kZXRhaWx7ZmlsbDojZTFkOGI2O3N0cm9rZTpub25lfS5lbmdyYXZle3N0cm9rZTojZTFkOGI2O3N0cm9rZS13aWR0aDozO2ZpbGw6bm9uZX08L3N0eWxlPjwvc3ZnPg==',n:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiMxYTI5MjciIHN0cm9rZT0iI2QyZDVjNyIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTI2IDgzTDM1IDY4TDM3IDQ4TDI3IDUwTDE1IDQ2TDE0IDM3TDI3IDI2TDMyIDE3TDQxIDE1TDQ3IDI1TDU5IDI4TDY5IDM4TDcyIDUxTDY0IDY0TDYzIDc3TDczIDgzWiIvPjxwYXRoIGQ9Ik0yNCA4NEg3OFY5MUgyNFoiLz48Y2lyY2xlIGN4PSIzNyIgY3k9IjMwIiByPSIzLjIiIGNsYXNzPSJkZXRhaWwiLz48cGF0aCBkPSJNMTkgNDNMMjkgNDEiIGNsYXNzPSJlbmdyYXZlIi8+PC9nPjxzdHlsZT4uZGV0YWlse2ZpbGw6I2UxZDhiNjtzdHJva2U6bm9uZX0uZW5ncmF2ZXtzdHJva2U6I2UxZDhiNjtzdHJva2Utd2lkdGg6MztmaWxsOm5vbmV9PC9zdHlsZT48L3N2Zz4=',p:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgYXJpYS1oaWRkZW49InRydWUiPjxnIGZpbGw9IiMxYTI5MjciIHN0cm9rZT0iI2QyZDVjNyIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PGNpcmNsZSBjeD0iNTAiIGN5PSIyNSIgcj0iMTIiLz48cGF0aCBkPSJNNDMgNDBINTdMNjUgNjhIMzVaIi8+PHBhdGggZD0iTTMxIDY5SDY5Vjc3SDMxWiIvPjxwYXRoIGQ9Ik0yNCA4MEg3NlY4OEgyNFoiLz48L2c+PHN0eWxlPi5kZXRhaWx7ZmlsbDojZTFkOGI2O3N0cm9rZTpub25lfS5lbmdyYXZle3N0cm9rZTojZTFkOGI2O3N0cm9rZS13aWR0aDozO2ZpbGw6bm9uZX08L3N0eWxlPjwvc3ZnPg=='};
 const depthLimit=1350;
 const manualActions=[];
 const expandedChains=new Set();
@@ -113,7 +169,7 @@ let applied={mode:CFG.filter_mode||'target',target:CFG.target_lines||50,minChapt
 let targetResult=null;
 let graphData={items:[],edges:[],width:800,height:500,minPly:0,maxPly:0};
 let transform={x:20,y:20,k:1};
-const boardRows=fen=>fen.split(' ')[0].split('/').map(row=>{let arr=[];for(let c of row)if(/[1-8]/.test(c))for(let i=0;i<+c;i++)arr.push(null);else arr.push(c);return arr});
+const boardRows=fen=>fen.split(' ')[0].split('/').map(row=>{const cells=[];for(const p of row){if(/[1-8]/.test(p))for(let j=0;j<Number(p);j++)cells.push(null);else cells.push(p);}return cells;});
 const rootOf=id=>R[N[id].chapter];
 const stats=n=>n?.stats, games=n=>stats(n)?.n??null;
 const hasComment=n=>Boolean(strip(n.comment)||strip(n.starting_comment));
@@ -251,7 +307,7 @@ function uiInit(){
  R.forEach((id,i)=>{let opt=document.createElement('option');opt.value=String(i);opt.textContent=N[id].chapter_name;$('chapter').append(opt)});
  $('chapter').addEventListener('change',e=>setView(e.target.value));
  $('trapGraphBtn').addEventListener('click',()=>setView('traps'));
- $('metrics').innerHTML=[['Chapters',S.chapters],['Distinct positions',S.positions],['Lichess statistics',`${fmtN(S.queried)} / ${fmtN(S.positions)}`],['Engine evaluations',`${fmtN(S.eval_found)} / ${fmtN(S.eval_attempted)}`],['PGN nodes',S.nodes]].map(([t,v])=>`<div class="kpi"><strong>${h(v)}</strong><span>${h(t)}</span></div>`).join('');
+ $('metrics').innerHTML=[['Chapters',S.chapters],['Distinct positions',S.positions],['Explorer positions processed',`${fmtN(S.queried)} / ${fmtN(S.positions)}`],['Engine evaluations',`${fmtN(S.eval_found)} / ${fmtN(S.eval_attempted)}`],['PGN nodes',S.nodes]].map(([t,v])=>`<div class="kpi"><strong>${h(v)}</strong><span>${h(t)}</span></div>`).join('');
  const warnings=[];if(CFG.dry_run)warnings.push(`DRY RUN: this dashboard contains only ${CFG.sampled_lines} lines of ${CFG.available_lines} original lines. Exported PGN is a sample, not the complete repertoire.`);
  if(S.queried<S.positions||S.eval_found<S.eval_attempted)warnings.push(`Incomplete data: ${S.queried}/${S.positions} positions with Lichess stats and ${S.eval_found}/${S.eval_attempted} requested engine evaluations. A missing evaluation does NOT mean equality.`);
  if(warnings.length){$('warning').hidden=false;$('warning').textContent=warnings.join(' · ')}
@@ -276,7 +332,22 @@ function uiInit(){
 function select(id){selected=id;chapter=N[id].chapter;if(viewMode==='chapter')$('chapter').value=String(chapter);showSelected();markSelection();$('detailOverlay').hidden=false}
 function focusAt(id){chapter=N[id].chapter;viewMode='chapter';$('chapter').value=String(chapter);focus=id;selected=id;showSelected();drawGraph(true);renderTable();$('detailOverlay').hidden=false}
 function openTrap(id){let parent=N[id].parent;focusAt(parent===null?id:parent);select(id);$('graphCanvas').scrollIntoView({behavior:'smooth',block:'center'})}
-function showBoard(){const n=N[selected],rows=boardRows(n.fen);let sq='';for(let y=0;y<8;y++)for(let x=0;x<8;x++){let ri=flipped?7-y:y,fi=flipped?7-x:x,p=rows[ri][fi],dark=(fi+(8-ri))%2===1,square='abcdefgh'[fi]+(8-ri),last=n.uci&&(square===n.uci.slice(0,2)||square===n.uci.slice(2,4));sq+=`<div class="sq ${dark?'d':'l'} ${last?'last':''}"><span class="${p&&p===p.toUpperCase()?'wp':'bp'}">${pieces[p]||''}</span></div>`}$('board').innerHTML=sq}
+function showBoard(){
+ const n=N[selected],rows=boardRows(n.fen);
+ let squares='',icons='',coords='';
+ // A single fixed 800x800 coordinate system: no flex/grid child can resize squares.
+ for(let row=0;row<8;row++)for(let col=0;col<8;col++){
+  const rank=flipped?row:7-row,file=flipped?7-col:col,p=rows[7-rank]?.[file];
+  const x=col*100,y=row*100,square='abcdefgh'[file]+(rank+1);
+  const dark=(file+rank)%2===0, last=n.uci&&(square===n.uci.slice(0,2)||square===n.uci.slice(2,4));
+  squares+=`<rect class="board-square" x="${x}" y="${y}" width="100" height="100" fill="${dark?'#91a689':'#efe6cf'}"/>`;
+  if(last)squares+=`<rect class="last-move-highlight" x="${x}" y="${y}" width="100" height="100" fill="#ffdc65" opacity=".45"/>`;
+  if(p&&pieceImages[p])icons+=`<image x="${x+5}" y="${y+5}" width="90" height="90" preserveAspectRatio="xMidYMid meet" href="${pieceImages[p]}"/>`;
+  if(col===0)coords+=`<text x="${x+5}" y="${y+16}" font-size="15" font-weight="700" fill="#354b3e">${rank+1}</text>`;
+  if(row===7)coords+=`<text x="${x+85}" y="${y+95}" font-size="15" font-weight="700" fill="#354b3e">${'abcdefgh'[file]}</text>`;
+ }
+ $('board').innerHTML=`<svg viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chess position, ${flipped?'Black':'White'} at the bottom">${squares}${icons}${coords}</svg>`;
+}
 function showSelected(){const n=N[selected],s=n.stats;
  $('boardTitle').textContent=n.san?((n.turn==='black'?'White: ':'Black: ')+n.san+moveAnnotation(n).glyph+(moveAnnotation(n).quality?' '+moveAnnotation(n).quality:'')):'Initial position';$('chapterName').textContent=n.chapter_name;
  $('branchBtn').textContent=kept.has(n.id)?'− Exclude branch and continuations':'+ Include branch and continuations';$('branchBtn').className='btn '+(kept.has(n.id)?'':'primary');
@@ -530,5 +601,18 @@ async function exportPNG(){let g=graphData,scene=$('graphScene').cloneNode(true)
  }catch(err){alert('PNG export failed: '+err.message)}finally{URL.revokeObjectURL(url)}
 }
 uiInit();
+if(new URLSearchParams(location.search).get('embedded')==='1'){
+ document.body.classList.add('embedded','view-tree');
+ const nav=$('embeddedNav');nav.hidden=false;
+ function switchGraphView(name){
+  for(const view of ['tree','lines','traps','data'])document.body.classList.toggle('view-'+view,view===name);
+  nav.querySelectorAll('button[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===name);b.setAttribute('aria-selected',String(b.dataset.view===name));});
+  if(name==='tree')requestAnimationFrame(()=>fitGraph());
+ }
+ nav.querySelectorAll('button[data-view]').forEach(b=>b.addEventListener('click',()=>switchGraphView(b.dataset.view)));
+ // Selecting a row automatically returns to the move tree, where the chessboard popover opens.
+ document.addEventListener('click',e=>{if(e.target.closest('#selectedLinesPanel tr.clickable, .trap-panel tr.clickable, .lower tr.clickable'))switchGraphView('tree')},true);
+ requestAnimationFrame(()=>fitGraph());
+}
 })();
 </script></body></html>

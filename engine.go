@@ -31,7 +31,7 @@ func findEngine(name string) string {
 				candidates = append(candidates, filepath.Join(dir, "engines", n), filepath.Join(dir, n))
 			}
 		}
-		candidates = append(candidates, "/opt/homebrew/bin/stockfish", "/usr/local/bin/stockfish", "/usr/bin/stockfish")
+		candidates = append(candidates, "/opt/homebrew/bin/stockfish", "/usr/local/bin/stockfish", "/usr/bin/stockfish", "/usr/games/stockfish")
 	}
 	for _, candidate := range candidates {
 		p, e := exec.LookPath(candidate)

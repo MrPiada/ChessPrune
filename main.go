@@ -56,6 +56,7 @@ type Server struct {
 	jobs   map[string]*Job
 	active string
 	root   string
+	tokens tokenStore
 }
 
 func newServer() (*Server, error) {
@@ -68,7 +69,7 @@ func newServer() (*Server, error) {
 	if err := os.MkdirAll(root, 0700); err != nil {
 		return nil, err
 	}
-	return &Server{jobs: map[string]*Job{}, root: root}, nil
+	return &Server{jobs: map[string]*Job{}, root: root, tokens: newTokenStore()}, nil
 }
 func (s *Server) snapshot(j *Job) map[string]any {
 	s.mu.Lock()
@@ -86,8 +87,7 @@ func (s *Server) job(id string) *Job { s.mu.Lock(); defer s.mu.Unlock(); return 
 func (s *Server) postJob(w http.ResponseWriter, req *http.Request) {
 	var payload struct {
 		Config
-		Token string `json:"token"`
-		PGN   struct {
+		PGN struct {
 			Source string `json:"source"`
 			Name   string `json:"name"`
 			Text   string `json:"text"`
@@ -112,6 +112,13 @@ func (s *Server) postJob(w http.ResponseWriter, req *http.Request) {
 			writeErr(w, 400, fmt.Errorf("Stockfish not found; select Auto, Cloud or None, or configure the engine path"))
 			return
 		}
+	}
+	// Resolve optional credentials before reserving a job or writing a PGN.
+	// The secret itself is never stored in Job.Config or returned to the UI.
+	token, _, tokenErr := activeToken(s.tokens)
+	if tokenErr != nil {
+		writeErr(w, 500, fmt.Errorf("cannot load Lichess token: %w", tokenErr))
+		return
 	}
 	s.mu.Lock()
 	if s.active != "" {
@@ -138,7 +145,7 @@ func (s *Server) postJob(w http.ResponseWriter, req *http.Request) {
 	s.active = id
 	s.jobs[id] = j
 	s.mu.Unlock()
-	go s.run(ctx, j, payload.PGN.Text, payload.Token)
+	go s.run(ctx, j, payload.PGN.Text, token)
 	writeJSON(w, 200, map[string]any{"id": id, "job": s.snapshot(j)})
 }
 func (s *Server) run(ctx context.Context, j *Job, content, token string) {
@@ -278,9 +285,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		b, _ := embedded.ReadFile("assets/ChessPrune_Icon.png")
 		w.Header().Set("Content-Type", "image/png")
 		_, _ = w.Write(b)
+	case path == "/api/credentials":
+		s.credentialHandler(w, r)
 	case r.Method == "GET" && path == "/api/health":
 		engine := findEngine("")
-		writeJSON(w, 200, map[string]any{"engine": engine, "runtime": "Go " + runtime.Version(), "chess_installed": true, "requests_installed": true, "go_backend": true})
+		writeJSON(w, 200, map[string]any{"engine": engine, "platform": runtime.GOOS, "runtime": "Go " + runtime.Version(), "go_backend": true})
+	case r.Method == "GET" && path == "/api/engine":
+		candidate := strings.TrimSpace(r.URL.Query().Get("path"))
+		writeJSON(w, 200, map[string]any{"engine": findEngine(candidate), "platform": runtime.GOOS})
 	case r.Method == "GET" && path == "/api/jobs":
 		writeJSON(w, 200, map[string]any{"jobs": []any{}})
 	case r.Method == "GET" && strings.HasPrefix(path, "/api/jobs/"):
@@ -355,7 +367,11 @@ func main() {
 		progress := func(phase string, done, total int, p float64, msg string) {
 			logger.Printf("%s: %.1f%% %d/%d %s", phase, p, done, total, msg)
 		}
-		if e = ExecuteAnalysis(context.Background(), string(data), cfg, os.Getenv("LICHESS_TOKEN"), *out, logger, progress); e != nil {
+		token, _, err := activeToken(newTokenStore())
+		if err != nil {
+			log.Fatalf("Lichess credentials: %v", err)
+		}
+		if e = ExecuteAnalysis(context.Background(), string(data), cfg, token, *out, logger, progress); e != nil {
 			log.Fatal(e)
 		}
 		return

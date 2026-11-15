@@ -2,6 +2,8 @@
 ; Required: -DINPUT_EXE=... -DOUTFILE=... -DLICENSE_PATH=...
 Unicode True
 Name "ChessPrune"
+Icon "${ICON_PATH}"
+UninstallIcon "${ICON_PATH}"
 OutFile "${OUTFILE}"
 InstallDir "$LOCALAPPDATA\ChessPrune"
 RequestExecutionLevel user

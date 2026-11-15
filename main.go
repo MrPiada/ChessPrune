@@ -15,18 +15,20 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
 //go:embed web/index.html dashboard_template.html assets/ChessPrune_Icon.png
 var embedded embed.FS
-var version = "dev"
+var version = "v1.2.0-go"
 var idRE = regexp.MustCompile(`^[A-Za-z0-9_-]{4,72}$`)
 
 type Progress struct {
@@ -52,11 +54,12 @@ type Job struct {
 	Dir             string             `json:"-"`
 }
 type Server struct {
-	mu     sync.Mutex
-	jobs   map[string]*Job
-	active string
-	root   string
-	tokens tokenStore
+	mu        sync.Mutex
+	jobs      map[string]*Job
+	active    string
+	root      string
+	tokens    tokenStore
+	lifecycle *browserLifecycle
 }
 
 func newServer() (*Server, error) {
@@ -285,6 +288,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		b, _ := embedded.ReadFile("assets/ChessPrune_Icon.png")
 		w.Header().Set("Content-Type", "image/png")
 		_, _ = w.Write(b)
+	case strings.HasPrefix(path, "/api/lifecycle/") && s.lifecycle != nil:
+		s.lifecycle.ServeHTTP(w, r)
 	case path == "/api/credentials":
 		s.credentialHandler(w, r)
 	case r.Method == "GET" && path == "/api/health":
@@ -391,11 +396,47 @@ func main() {
 		log.Fatal(e)
 	}
 	url := "http://" + ln.Addr().String() + "/"
-	log.Printf("ChessPrune %s | %s | Go backend | local access only", version, url)
-	if !*noBrowser {
-		go func() { time.Sleep(600 * time.Millisecond); openBrowser(url) }()
+	httpServer := &http.Server{Handler: srv, ReadHeaderTimeout: 10 * time.Second}
+	appCtx, stopSignals := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stopSignals()
+	shutdown := sync.OnceFunc(func() {
+		srv.mu.Lock()
+		if srv.active != "" {
+			if j := srv.jobs[srv.active]; j != nil && j.Cancel != nil {
+				j.Cancel()
+			}
+		}
+		srv.mu.Unlock()
+		if srv.lifecycle != nil {
+			srv.lifecycle.closeAll()
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := httpServer.Shutdown(ctx); err != nil {
+			_ = httpServer.Close()
+		}
+	})
+	srv.lifecycle = newBrowserLifecycle(!*noBrowser, 6*time.Second, func() {
+		log.Println("Last ChessPrune browser window closed; stopping local server")
+		// Let the explicit Quit response reach the browser before shutdown.
+		time.Sleep(100 * time.Millisecond)
+		shutdown()
+	})
+	go srv.lifecycle.watch(appCtx)
+	go func() { <-appCtx.Done(); shutdown() }()
+	log.Printf("ChessPrune %s | %s | browser-window lifetime | local access only", version, url)
+	if *noBrowser {
+		log.Println("Headless mode: close with Ctrl+C (browser auto-exit disabled)")
 	}
-	if e = http.Serve(ln, srv); e != nil {
+	if !*noBrowser {
+		go func() {
+			time.Sleep(600 * time.Millisecond)
+			if appCtx.Err() == nil {
+				openBrowser(url)
+			}
+		}()
+	}
+	if e = httpServer.Serve(ln); e != nil && !errors.Is(e, http.ErrServerClosed) {
 		log.Fatal(e)
 	}
 }

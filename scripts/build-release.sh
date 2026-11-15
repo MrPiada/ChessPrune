@@ -3,7 +3,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-VERSION="${1:-v1.1.0-go}"
+VERSION="${1:-v1.2.0-go}"
 DIST="${DIST_DIR:-$ROOT/dist}"
 mkdir -p "$DIST"
 # Generate the native Windows resource from PNGs (Python stdlib only).

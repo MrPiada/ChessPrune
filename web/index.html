@@ -76,9 +76,10 @@ body{min-height:0}
 @media(max-width:850px){.analysis-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.analysis-grid .choice small,.analysis-grid .section-head>span{display:none}.analysis-grid .checkline{gap:5px}.analysis-grid .settings-col:nth-child(3) #logPanel{flex-basis:115px}}
 .token-controls{display:flex;gap:6px;align-items:center;min-width:0}.token-controls input{min-width:0;flex:1}.token-controls .btn{padding:7px 9px;min-height:36px;font-size:11px;flex-shrink:0}.token-field .hint{line-height:1.35}.token-field{min-width:0}
 @media(max-height:800px){.analysis-grid .token-field #tokenStatus{display:block;font-size:10px;line-height:1.1}}
+.quit-app-button{font:inherit;cursor:pointer;color:#ffd5cf!important;border-color:#a9625b!important;background:#42262a!important}.quit-app-button:hover{background:#69363c!important}.quit-app-button:focus-visible{outline:2px solid #ffe7ba;outline-offset:2px}
 </style></head>
 <body><div class="wrap">
-<header class="top"><div class="brand-identity"><img alt="ChessPrune logo" height="76" src="/assets/ChessPrune_Icon.png" width="76"/><div><div class="eyebrow">PGN · Lichess Explorer · Stockfish</div><h1>Chess<span style="color:var(--accent)">Prune</span></h1><div class="sub">Less memorization. Smarter preparation.</div></div></div><div class="top-right"><span class="badge"><span class="dot" id="healthDot"></span><span id="health">Checking environment…</span></span><a class="badge" href="https://lichess.org/account/oauth/token" rel="noopener" target="_blank">Lichess token ↗</a></div></header>
+<header class="top"><div class="brand-identity"><img alt="ChessPrune logo" height="76" src="/assets/ChessPrune_Icon.png" width="76"/><div><div class="eyebrow">PGN · Lichess Explorer · Stockfish</div><h1>Chess<span style="color:var(--accent)">Prune</span></h1><div class="sub">Less memorization. Smarter preparation.</div></div></div><div class="top-right"><span class="badge"><span class="dot" id="healthDot"></span><span id="health">Checking environment…</span></span><a class="badge" href="https://lichess.org/account/oauth/token" rel="noopener" target="_blank">Lichess token ↗</a><button class="badge quit-app-button" id="quitApplication" type="button" title="Stop ChessPrune and close its local server">⏻ Quit application</button></div></header>
 
 
 <nav aria-label="ChessPrune workspace" class="workspace-tabs" role="tablist">
@@ -183,5 +184,50 @@ async function cancel(){if(!currentJob)return;$('cancelBtn').disabled=true;try{a
 $('pgn').addEventListener('change',checkFileState);
 $('targetSlider').addEventListener('input',()=>{$('targetLines').value=$('targetSlider').value;});$('targetLines').addEventListener('input',()=>{$('targetSlider').value=Math.min(150,Math.max(1,num('targetLines')||1));});$('coverage').addEventListener('input',()=>{$('coverageLabel').textContent=$('coverage').value+'%';});$('trapBoost').addEventListener('input',()=>{$('trapLabel').textContent=Number($('trapBoost').value).toFixed(2)+'×';});$('evalSource').addEventListener('change',engineWarning);
 $('analysisTabButton').addEventListener('click',()=>switchTab('analysis'));$('graphTabButton').addEventListener('click',()=>switchTab('graph'));$('backToAnalysis').addEventListener('click',()=>switchTab('analysis'));$('checkEngine').addEventListener('click',recheckEngine);$('engine').addEventListener('keydown',e=>{if(e.key==='Enter')recheckEngine();});$('saveToken').addEventListener('click',()=>saveToken().catch(e=>$('tokenStatus').textContent='Unable to save token: '+e.message));$('forgetToken').addEventListener('click',forgetToken);$('startBtn').addEventListener('click',start);$('cancelBtn').addEventListener('click',cancel);$('refreshBtn').addEventListener('click',()=>currentJob&&showJob(currentJob));
+$('quitApplication').addEventListener('click',()=>quitApplication().catch(e=>alert(e.message)));
+// Browser window lifecycle. EventSource stays connected even in background tabs;
+// unlike polling timers it is not paused by background-tab throttling.
+let appBrowserSession = '';
+let appBrowserEvents = null;
+let appIsQuitting = false;
+function connectAppLifecycle() {
+  if (appIsQuitting || appBrowserEvents) return;
+  const stream = new EventSource('/api/lifecycle/events');
+  appBrowserEvents = stream;
+  stream.addEventListener('session', event => { appBrowserSession = event.data; });
+  stream.addEventListener('error', () => {
+    // EventSource automatically reconnects after a transient interruption.
+    // No secret or heartbeat is saved in browser storage.
+    appBrowserSession = '';
+  });
+}
+function releaseAppLifecycle() {
+  const session = appBrowserSession;
+  appBrowserSession = '';
+  if (appBrowserEvents) { appBrowserEvents.close(); appBrowserEvents = null; }
+  if (session) {
+    // The beacon is best-effort; closing the SSE stream is the primary signal.
+    const payload = new Blob([JSON.stringify({session})], {type:'application/json'});
+    navigator.sendBeacon?.('/api/lifecycle/close', payload);
+  }
+}
+window.addEventListener('pagehide', releaseAppLifecycle);
+window.addEventListener('pageshow', event => { if (event.persisted) connectAppLifecycle(); });
+async function quitApplication() {
+  if (appIsQuitting) return;
+  if (!appBrowserSession) { alert('Connecting to the local application. Please retry in a moment.'); return; }
+  if (!confirm('Quit this application? Any running analysis will be cancelled.')) return;
+  const response = await fetch('/api/lifecycle/quit', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({session:appBrowserSession}), cache:'no-store'
+  });
+  if (!response.ok) throw Error('Unable to close the application ('+response.status+').');
+  appIsQuitting = true;
+  releaseAppLifecycle();
+  document.body.innerHTML = '<main style="min-height:100vh;display:grid;place-content:center;text-align:center;gap:12px;background:#111b20;color:#e7eedc;font:16px system-ui,sans-serif"><h1 style="margin:0">Application closed</h1><p style="margin:0;color:#9cb3a9">The local server has stopped. You can close this tab.</p></main>';
+  try { window.close(); } catch (_) { /* Browsers generally restrict closing manually opened tabs. */ }
+}
+connectAppLifecycle();
+
 engineWarning();health();refreshCredentials();
 </script></body></html>

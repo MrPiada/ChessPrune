@@ -32,7 +32,14 @@ Get a portable executable or installer from [GitHub Releases](https://github.com
 | Windows x64 | `.zip`, optional `-Setup.exe` | Run `ChessPrune.exe` |
 | Ubuntu / Linux x64 or ARM64 | `.tar.gz` | Run `./ChessPrune`; optional desktop launcher in the archive |
 
-The app embeds its frontend and its chess-piece artwork, starts a loopback-only server and opens a browser tab. The downloaded HTML dashboard also contains its own board images and works offline. Native release builds are **not notarized or signed with a commercial code-signing identity**; operating systems may display a warning.
+The app embeds its frontend and its chess-piece artwork, starts a loopback-only server and opens a browser tab.
+
+### Closing the application
+
+**Quit application** in the top-right corner stops ChessPrune, not just its browser tab. Closing the **last ChessPrune browser tab/window** also shuts down the Go server automatically after a **six-second grace period**, which prevents an ordinary refresh from accidentally quitting. Multiple open ChessPrune tabs keep the server running until the last one closes. Any active analysis is cancelled when the application exits; previously written results remain in the per-user analysis folder.
+
+This uses a persistent, same-origin browser-to-server connection (Server-Sent Events) rather than unreliable background-tab polling. A brief network interruption may count as closing the tab if the stream cannot reconnect within the grace period. **Headless mode** (`--no-browser`) intentionally disables automatic browser-close shutdown: stop the terminal process with **Ctrl+C**. ChessPrune uses your regular browser, so closing the application does not close unrelated browser windows or quit Chrome/Safari/Firefox.
+ The downloaded HTML dashboard also contains its own board images and works offline. Native release builds are **not notarized or signed with a commercial code-signing identity**; operating systems may display a warning.
 
 ### Stockfish
 
@@ -71,22 +78,22 @@ A CLI mode is also supported: `go run . --analyze repertoire.pgn --side black --
 ```bash
 brew install go gh python makensis
 chmod +x scripts/build-release.sh
-./scripts/build-release.sh v1.1.0-go
+./scripts/build-release.sh v1.2.0-go
 ```
 
 The script builds Apple Silicon and Intel `.app` ZIPs (and `.dmg` files on macOS), Windows `.exe` ZIP (with optional NSIS Setup installer), and Linux x64/ARM64 `.tar.gz`. Files and SHA-256 checksums appear in `dist/`. The native app icons remain unchanged from ChessPrune's repository branding.
 
-**To publish from an existing local clone** after testing, commit and push changes, tag `v1.1.0-go`, then attach release assets:
+**To publish from an existing local clone** after testing, commit and push changes, tag `v1.2.0-go`, then attach release assets:
 
 ```bash
 git add -A && git diff --cached --check
-git commit -m "ChessPrune v1.1.0-go: persistent token and stable SVG board"
+git commit -m "ChessPrune v1.2.0-go: persistent token and stable SVG board"
 git push origin main
-git tag -a v1.1.0-go -m "ChessPrune v1.1.0-go"
-git push origin v1.1.0-go
-gh release create v1.1.0-go dist/ChessPrune-v1.1.0-go-* dist/SHA256SUMS.txt \
-  --verify-tag --title "ChessPrune v1.1.0-go" \
-  --notes-file RELEASE_NOTES_v1.1.0-go.md --latest
+git tag -a v1.2.0-go -m "ChessPrune v1.2.0-go"
+git push origin v1.2.0-go
+gh release create v1.2.0-go dist/ChessPrune-v1.2.0-go-* dist/SHA256SUMS.txt \
+  --verify-tag --title "ChessPrune v1.2.0-go" \
+  --notes-file RELEASE_NOTES_v1.2.0-go.md --latest
 ```
 
 ## Notes

@@ -1,3 +1,7 @@
+## 1.2.0-go
+
+- Application exits when the last browser tab closes (six-second grace). Added Quit application button and headless opt-out; cancels in-progress analysis.
+
 # Changelog
 
 ## v1.1.0-go — persistent credentials and stable chessboard

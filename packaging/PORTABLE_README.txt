@@ -17,3 +17,11 @@ but they require network access and may not exist for all positions.
 
 macOS/Windows installers are not code-signed/notarized by this build script.
 See the GitHub README for security warnings, installation details and source.
+
+APP LIFECYCLE
+-------------
+The application runs a local Go server while its browser UI is open.
+Close the last application tab (allow a few seconds) or click "Quit application"
+in the app header to shut down the server and cancel an active analysis.
+A page refresh does not shut down the app. If started in headless mode
+(--no-browser for ChessPrune, --no-open for ChessGrowth), stop with Ctrl+C.
